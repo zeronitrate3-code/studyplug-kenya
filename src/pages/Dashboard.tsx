@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SUBJECTS, CURRENT_USER, MOCK_RESULTS } from "@/lib/mockData";
+import { CORE_SUBJECTS, SPORTS_SUBJECTS, ARTS_SUBJECTS, ELECTIVE_SUBJECTS, CURRENT_USER, MOCK_RESULTS, SUBJECTS } from "@/lib/mockData";
 import SubjectCard from "@/components/SubjectCard";
 import StatCard from "@/components/StatCard";
 import logo from "@/assets/logo.png";
@@ -7,6 +7,13 @@ import { ChevronDown } from "lucide-react";
 
 const Dashboard = () => {
   const [grade, setGrade] = useState(CURRENT_USER.grade);
+
+  const subjectGroups = [
+    { title: "📘 Core Subjects", subjects: CORE_SUBJECTS },
+    { title: "🏅 Sports Science", subjects: SPORTS_SUBJECTS },
+    { title: "🎨 Arts Pathway", subjects: ARTS_SUBJECTS },
+    { title: "📚 Electives", subjects: ELECTIVE_SUBJECTS },
+  ];
 
   return (
     <div className="animate-fade-in space-y-6 pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -41,15 +48,17 @@ const Dashboard = () => {
         <StatCard icon="⭐" label="Rank Points" value={CURRENT_USER.rankPoints} color="success" />
       </div>
 
-      {/* Subjects */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-3">Choose a Subject</h2>
-        <div className="grid grid-cols-3 gap-3">
-          {SUBJECTS.map((subject) => (
-            <SubjectCard key={subject.id} id={subject.id} name={subject.name} icon={subject.icon} grade={grade} />
-          ))}
+      {/* Subjects by pathway */}
+      {subjectGroups.map((group) => (
+        <div key={group.title}>
+          <h2 className="text-lg font-semibold text-foreground mb-3">{group.title}</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {group.subjects.map((subject) => (
+              <SubjectCard key={subject.id} id={subject.id} name={subject.name} icon={subject.icon} grade={grade} />
+            ))}
+          </div>
         </div>
-      </div>
+      ))}
 
       {/* Recent Activity */}
       <div>

@@ -1,11 +1,36 @@
 import { useState } from "react";
-import { SUBJECTS, MOCK_RESULTS } from "@/lib/mockData";
+import { CORE_SUBJECTS, SPORTS_SUBJECTS, ARTS_SUBJECTS, ELECTIVE_SUBJECTS, SUBJECTS, MOCK_RESULTS } from "@/lib/mockData";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, Play, History, BarChart2 } from "lucide-react";
+
+const SubjectRow = ({ subject, grade, navigate }: { subject: { id: string; name: string; icon: string }; grade: number; navigate: ReturnType<typeof useNavigate> }) => (
+  <button
+    onClick={() => navigate(`/exam/${subject.id}?grade=${grade}`)}
+    className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
+  >
+    <div className="flex items-center gap-3">
+      <span className="text-2xl">{subject.icon}</span>
+      <div className="text-left">
+        <p className="text-sm font-semibold text-card-foreground">{subject.name}</p>
+        <p className="text-xs text-muted-foreground">Grade {grade} • 5 Questions • 10 min</p>
+      </div>
+    </div>
+    <div className="flex items-center gap-1 rounded-lg gradient-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+      <Play className="h-3 w-3" /> Start
+    </div>
+  </button>
+);
 
 const Exams = () => {
   const [grade, setGrade] = useState(7);
   const navigate = useNavigate();
+
+  const subjectGroups = [
+    { title: "📘 Core Subjects", subjects: CORE_SUBJECTS },
+    { title: "🏅 Sports Science", subjects: SPORTS_SUBJECTS },
+    { title: "🎨 Arts Pathway", subjects: ARTS_SUBJECTS },
+    { title: "📚 Electives", subjects: ELECTIVE_SUBJECTS },
+  ];
 
   return (
     <div className="animate-fade-in space-y-6 pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -25,30 +50,16 @@ const Exams = () => {
         </div>
       </div>
 
-      {/* Start new exam */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-3">Start New Exam</h2>
-        <div className="space-y-2">
-          {SUBJECTS.map((subject) => (
-            <button
-              key={subject.id}
-              onClick={() => navigate(`/exam/${subject.id}?grade=${grade}`)}
-              className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{subject.icon}</span>
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-card-foreground">{subject.name}</p>
-                  <p className="text-xs text-muted-foreground">Grade {grade} • 5 Questions • 10 min</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 rounded-lg gradient-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
-                <Play className="h-3 w-3" /> Start
-              </div>
-            </button>
-          ))}
+      {subjectGroups.map((group) => (
+        <div key={group.title}>
+          <h2 className="text-base font-semibold text-foreground mb-2">{group.title}</h2>
+          <div className="space-y-2">
+            {group.subjects.map((subject) => (
+              <SubjectRow key={subject.id} subject={subject} grade={grade} navigate={navigate} />
+            ))}
+          </div>
         </div>
-      </div>
+      ))}
 
       {/* Exam History */}
       <div>
