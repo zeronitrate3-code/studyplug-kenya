@@ -2,6 +2,7 @@ import { useState } from "react";
 import { SUBJECTS, CURRENT_USER, MOCK_RESULTS } from "@/lib/mockData";
 import SubjectCard from "@/components/SubjectCard";
 import StatCard from "@/components/StatCard";
+import logo from "@/assets/logo.png";
 import { ChevronDown } from "lucide-react";
 
 const Dashboard = () => {
@@ -11,9 +12,12 @@ const Dashboard = () => {
     <div className="animate-fade-in space-y-6 pb-24 px-4 pt-6 max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Hi, {CURRENT_USER.name.split(" ")[0]}! 👋</h1>
-          <p className="text-sm text-muted-foreground">Ready to learn today?</p>
+        <div className="flex items-center gap-2">
+          <img src={logo} alt="StudyPlug" className="h-10 w-10 rounded-lg object-contain" />
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Hi, {CURRENT_USER.name.split(" ")[0]}! 👋</h1>
+            <p className="text-xs text-muted-foreground">Ready to learn today?</p>
+          </div>
         </div>
         <div className="relative">
           <select
