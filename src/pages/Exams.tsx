@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CORE_SUBJECTS, SPORTS_SUBJECTS, ARTS_SUBJECTS, ELECTIVE_SUBJECTS, SUBJECTS, MOCK_RESULTS } from "@/lib/mockData";
+import { MOCK_RESULTS, SUBJECTS, getSubjectGroupsForGrade } from "@/lib/mockData";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, Play, History, BarChart2 } from "lucide-react";
 
@@ -25,12 +25,7 @@ const Exams = () => {
   const [grade, setGrade] = useState(7);
   const navigate = useNavigate();
 
-  const subjectGroups = [
-    { title: "📘 Core Subjects", subjects: CORE_SUBJECTS },
-    { title: "🏅 Sports Science", subjects: SPORTS_SUBJECTS },
-    { title: "🎨 Arts Pathway", subjects: ARTS_SUBJECTS },
-    { title: "📚 Electives", subjects: ELECTIVE_SUBJECTS },
-  ];
+  const subjectGroups = getSubjectGroupsForGrade(grade);
 
   return (
     <div className="animate-fade-in space-y-6 pb-24 px-4 pt-6 max-w-lg mx-auto">

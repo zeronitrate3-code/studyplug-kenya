@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CORE_SUBJECTS, SPORTS_SUBJECTS, ARTS_SUBJECTS, ELECTIVE_SUBJECTS, CURRENT_USER, MOCK_RESULTS, SUBJECTS } from "@/lib/mockData";
+import { CURRENT_USER, MOCK_RESULTS, SUBJECTS, getSubjectGroupsForGrade } from "@/lib/mockData";
 import SubjectCard from "@/components/SubjectCard";
 import StatCard from "@/components/StatCard";
 import logo from "@/assets/logo.png";
@@ -8,12 +8,7 @@ import { ChevronDown } from "lucide-react";
 const Dashboard = () => {
   const [grade, setGrade] = useState(CURRENT_USER.grade);
 
-  const subjectGroups = [
-    { title: "📘 Core Subjects", subjects: CORE_SUBJECTS },
-    { title: "🏅 Sports Science", subjects: SPORTS_SUBJECTS },
-    { title: "🎨 Arts Pathway", subjects: ARTS_SUBJECTS },
-    { title: "📚 Electives", subjects: ELECTIVE_SUBJECTS },
-  ];
+  const subjectGroups = getSubjectGroupsForGrade(grade);
 
   return (
     <div className="animate-fade-in space-y-6 pb-24 px-4 pt-6 max-w-lg mx-auto">

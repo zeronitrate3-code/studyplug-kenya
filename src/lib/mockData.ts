@@ -1,4 +1,30 @@
-// CORE SUBJECTS (Compulsory)
+// GRADE 10 SUBJECTS
+export const GRADE_10_SUBJECTS = [
+  { id: "chemistry", name: "Chemistry", icon: "🧪", color: "accent" },
+  { id: "biology", name: "Biology", icon: "🧬", color: "success" },
+  { id: "general-science", name: "General Science", icon: "🔬", color: "primary" },
+  { id: "physics", name: "Physics", icon: "⚛️", color: "secondary" },
+  { id: "computer-studies", name: "Computer Studies", icon: "💻", color: "primary" },
+  { id: "literature", name: "Literature", icon: "📚", color: "warning" },
+  { id: "mathematics", name: "Mathematics", icon: "📐", color: "accent" },
+  { id: "english", name: "English", icon: "📖", color: "primary" },
+  { id: "kiswahili", name: "Kiswahili", icon: "🗣️", color: "secondary" },
+] as const;
+
+// GRADE 7-9 SUBJECTS
+export const GRADE_7_9_SUBJECTS = [
+  { id: "business", name: "Business Studies", icon: "💼", color: "primary" },
+  { id: "social-studies", name: "Social Studies", icon: "🌍", color: "success" },
+  { id: "creative-arts", name: "Creative Arts", icon: "🎨", color: "accent" },
+  { id: "agriculture", name: "Agriculture", icon: "🌾", color: "warning" },
+  { id: "mathematics", name: "Mathematics", icon: "📐", color: "accent" },
+  { id: "kiswahili", name: "Kiswahili", icon: "🗣️", color: "secondary" },
+  { id: "english", name: "English", icon: "📖", color: "primary" },
+  { id: "integrated-science", name: "Integrated Science", icon: "🔬", color: "success" },
+  { id: "pre-technical", name: "Pre-Technical Studies", icon: "🔧", color: "secondary" },
+] as const;
+
+// CORE SUBJECTS (for lower grades 1-6)
 export const CORE_SUBJECTS = [
   { id: "english", name: "English", icon: "📖", color: "primary" },
   { id: "kiswahili", name: "Kiswahili", icon: "🗣️", color: "secondary" },
@@ -35,7 +61,24 @@ export const ELECTIVE_SUBJECTS = [
 ] as const;
 
 // Combined for backward compat
-export const SUBJECTS = [...CORE_SUBJECTS, ...SPORTS_SUBJECTS, ...ARTS_SUBJECTS, ...ELECTIVE_SUBJECTS] as const;
+export const SUBJECTS = [...GRADE_10_SUBJECTS, ...GRADE_7_9_SUBJECTS, ...CORE_SUBJECTS, ...SPORTS_SUBJECTS, ...ARTS_SUBJECTS, ...ELECTIVE_SUBJECTS] as const;
+
+// Helper to get subjects by grade
+export function getSubjectGroupsForGrade(grade: number) {
+  if (grade === 10) {
+    return [{ title: "📘 Grade 10 Subjects", subjects: GRADE_10_SUBJECTS }];
+  }
+  if (grade >= 7 && grade <= 9) {
+    return [{ title: `📘 Grade ${grade} Subjects`, subjects: GRADE_7_9_SUBJECTS }];
+  }
+  // Grades 1-6
+  return [
+    { title: "📘 Core Subjects", subjects: CORE_SUBJECTS },
+    { title: "🏅 Sports Science", subjects: SPORTS_SUBJECTS },
+    { title: "🎨 Arts Pathway", subjects: ARTS_SUBJECTS },
+    { title: "📚 Electives", subjects: ELECTIVE_SUBJECTS },
+  ];
+}
 
 export const GRADES = Array.from({ length: 10 }, (_, i) => i + 1);
 
