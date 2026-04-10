@@ -100,8 +100,8 @@ export interface ChatRoom {
 export const MOCK_EXAM: Exam = {
   id: "exam-1",
   grade: 7,
-  subject: "math",
-  title: "Math Quiz - Fractions & Decimals",
+  subject: "mathematics",
+  title: "Mathematics Quiz - Fractions & Decimals",
   timeLimit: 600,
   questions: [
     { id: "q1", question: "What is 1/2 + 1/4?", options: ["1/2", "3/4", "1/3", "2/3"], correctAnswer: 1, explanation: "1/2 = 2/4, so 2/4 + 1/4 = 3/4." },
