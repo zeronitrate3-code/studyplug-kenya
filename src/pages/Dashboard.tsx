@@ -15,7 +15,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <img src={logo} alt="Trivia StudyPlug" className="h-10 w-10 rounded-lg object-contain" />
+          <img src={logo} alt="StudyPlug" className="h-10 w-10 rounded-lg object-contain" />
           <div>
             <h1 className="text-xl font-bold text-foreground">Hi, {CURRENT_USER.name.split(" ")[0]}! 👋</h1>
             <p className="text-xs text-muted-foreground">Ready to learn today?</p>
