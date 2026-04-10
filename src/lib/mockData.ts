@@ -150,7 +150,7 @@ export const CURRENT_USER: Student = {
 };
 
 export const MOCK_RESULTS: ExamResult[] = [
-  { examId: "e1", score: 4, total: 5, percentage: 80, dateTaken: "2026-04-09", answers: [1, 2, 1, 0, 0], subject: "math", grade: 7 },
+  { examId: "e1", score: 4, total: 5, percentage: 80, dateTaken: "2026-04-09", answers: [1, 2, 1, 0, 0], subject: "mathematics", grade: 7 },
   { examId: "e2", score: 3, total: 5, percentage: 60, dateTaken: "2026-04-07", answers: [0, 1, 2, 1, 3], subject: "english", grade: 7 },
-  { examId: "e3", score: 5, total: 5, percentage: 100, dateTaken: "2026-04-05", answers: [1, 0, 2, 3, 1], subject: "science", grade: 7 },
+  { examId: "e3", score: 5, total: 5, percentage: 100, dateTaken: "2026-04-05", answers: [1, 0, 2, 3, 1], subject: "kiswahili", grade: 7 },
 ];
