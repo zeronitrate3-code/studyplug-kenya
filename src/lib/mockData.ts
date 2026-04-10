@@ -1,10 +1,41 @@
-export const SUBJECTS = [
-  { id: "math", name: "Math", icon: "📐", color: "primary" },
-  { id: "english", name: "English", icon: "📖", color: "secondary" },
-  { id: "science", name: "Science", icon: "🔬", color: "accent" },
-  { id: "social", name: "Social Studies", icon: "🌍", color: "warning" },
-  { id: "computer", name: "Computer Studies", icon: "💻", color: "success" },
+// CORE SUBJECTS (Compulsory)
+export const CORE_SUBJECTS = [
+  { id: "english", name: "English", icon: "📖", color: "primary" },
+  { id: "kiswahili", name: "Kiswahili", icon: "🗣️", color: "secondary" },
+  { id: "mathematics", name: "Mathematics", icon: "📐", color: "accent" },
+  { id: "pe", name: "Physical Education", icon: "🏃", color: "warning" },
+  { id: "csl", name: "Community Service", icon: "🤝", color: "success" },
+  { id: "ict", name: "Digital Literacy / ICT", icon: "💻", color: "primary" },
 ] as const;
+
+// SPORTS SCIENCE PATHWAY
+export const SPORTS_SUBJECTS = [
+  { id: "sports-science", name: "Sports Science", icon: "🏅", color: "warning" },
+  { id: "pe-advanced", name: "PE (Advanced)", icon: "🏋️", color: "accent" },
+  { id: "health-fitness", name: "Health & Fitness", icon: "❤️", color: "destructive" },
+  { id: "anatomy", name: "Anatomy & Movement", icon: "🦴", color: "secondary" },
+  { id: "sports-mgmt", name: "Sports Management", icon: "📋", color: "primary" },
+] as const;
+
+// ARTS PATHWAY
+export const ARTS_SUBJECTS = [
+  { id: "fine-art", name: "Fine Art", icon: "🎨", color: "accent" },
+  { id: "music", name: "Music", icon: "🎵", color: "primary" },
+  { id: "theatre-film", name: "Theatre & Film", icon: "🎭", color: "secondary" },
+  { id: "dance", name: "Dance", icon: "💃", color: "warning" },
+  { id: "creative-writing", name: "Creative Writing", icon: "✍️", color: "success" },
+] as const;
+
+// ELECTIVE SUBJECTS
+export const ELECTIVE_SUBJECTS = [
+  { id: "history", name: "History & Citizenship", icon: "🏛️", color: "warning" },
+  { id: "geography", name: "Geography", icon: "🌍", color: "success" },
+  { id: "business", name: "Business Studies", icon: "💼", color: "primary" },
+  { id: "religious-ed", name: "Religious Education", icon: "📿", color: "secondary" },
+] as const;
+
+// Combined for backward compat
+export const SUBJECTS = [...CORE_SUBJECTS, ...SPORTS_SUBJECTS, ...ARTS_SUBJECTS, ...ELECTIVE_SUBJECTS] as const;
 
 export const GRADES = Array.from({ length: 10 }, (_, i) => i + 1);
 
