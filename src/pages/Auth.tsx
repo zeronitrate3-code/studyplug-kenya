@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import logo from "@/assets/logo.png";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -52,7 +53,7 @@ const Auth = () => {
     <div className="flex min-h-screen items-center justify-center px-4 bg-background">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
-          <img src="/lovable-uploads/b199bf95-48e4-4178-a08b-f tried3a1cdfc5d.png" alt="StudyPlug Kenya" className="w-16 h-16 mx-auto rounded-xl" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <img src={logo} alt="StudyPlug Kenya" className="w-16 h-16 mx-auto rounded-xl" />
           <h1 className="text-2xl font-bold text-foreground">StudyPlug Kenya</h1>
           <p className="text-sm text-muted-foreground">{isLogin ? "Welcome back!" : "Create your account"}</p>
         </div>
