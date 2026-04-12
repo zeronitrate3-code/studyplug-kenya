@@ -1,14 +1,91 @@
-import { CURRENT_USER, MOCK_RESULTS, SUBJECTS } from "@/lib/mockData";
+import { useState, useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import RankBadge from "@/components/RankBadge";
-import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight } from "lucide-react";
+import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { GRADES } from "@/lib/mockData";
 
 const Profile = () => {
+  const { user, profile, signOut, refreshProfile } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [editName, setEditName] = useState(profile?.display_name || "");
+  const [editGrade, setEditGrade] = useState(String(profile?.grade || 7));
+  const [saving, setSaving] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/avatar.${ext}`;
+
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      return;
+    }
+    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+    await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("user_id", user.id);
+    await refreshProfile();
+    toast({ title: "Profile picture updated!" });
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSaving(true);
+    const { error } = await supabase.from("profiles").update({
+      display_name: editName,
+      grade: parseInt(editGrade),
+    }).eq("user_id", user.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      await refreshProfile();
+      toast({ title: "Profile updated!" });
+      setEditOpen(false);
+    }
+    setSaving(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
+  if (!user || !profile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Button onClick={() => navigate("/auth")}>Sign In</Button>
+      </div>
+    );
+  }
+
+  const displayName = profile.display_name || user.email?.split("@")[0] || "Student";
+  const initials = displayName.charAt(0).toUpperCase();
+
   const settingsItems = [
-    { icon: Settings, label: "Change Grade", desc: `Currently Grade ${CURRENT_USER.grade}` },
+    {
+      icon: Settings, label: "Edit Profile", desc: "Name & grade",
+      action: () => {
+        setEditName(profile.display_name || "");
+        setEditGrade(String(profile.grade || 7));
+        setEditOpen(true);
+      }
+    },
     { icon: Bell, label: "Notifications", desc: "Manage alerts" },
     { icon: Shield, label: "Privacy Controls", desc: "Data & privacy" },
+    { icon: FileText, label: "Privacy Policy", desc: "Read our policy", action: () => navigate("/privacy") },
     { icon: HelpCircle, label: "Help & FAQ", desc: "Get support" },
-    { icon: LogOut, label: "Log Out", desc: "Sign out", destructive: true },
+    { icon: LogOut, label: "Log Out", desc: "Sign out", destructive: true, action: handleSignOut },
   ];
 
   return (
@@ -16,52 +93,24 @@ const Profile = () => {
       {/* Profile Card */}
       <div className="rounded-2xl gradient-hero p-6 text-primary-foreground shadow-lg">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-primary-foreground/20 flex items-center justify-center text-2xl font-bold">
-            {CURRENT_USER.name.charAt(0)}
+          <div className="relative">
+            <Avatar className="w-16 h-16">
+              <AvatarImage src={profile.avatar_url || undefined} />
+              <AvatarFallback className="text-2xl font-bold bg-primary-foreground/20">{initials}</AvatarFallback>
+            </Avatar>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 rounded-full bg-primary p-1.5 shadow-md"
+            >
+              <Camera className="h-3 w-3 text-primary-foreground" />
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
           </div>
           <div className="flex-1">
-            <h1 className="text-xl font-bold">{CURRENT_USER.name}</h1>
-            <p className="text-sm opacity-80">Grade {CURRENT_USER.grade}</p>
+            <h1 className="text-xl font-bold">{displayName}</h1>
+            <p className="text-sm opacity-80">Grade {profile.grade || 7}</p>
           </div>
           <RankBadge rank={15} size="lg" />
-        </div>
-        <div className="grid grid-cols-3 gap-4 mt-5 text-center">
-          <div>
-            <p className="text-lg font-bold">{CURRENT_USER.totalScore}</p>
-            <p className="text-xs opacity-80">Points</p>
-          </div>
-          <div>
-            <p className="text-lg font-bold">{CURRENT_USER.examsCompleted}</p>
-            <p className="text-xs opacity-80">Exams</p>
-          </div>
-          <div>
-            <p className="text-lg font-bold">{CURRENT_USER.accuracy}%</p>
-            <p className="text-xs opacity-80">Accuracy</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Exam History */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-3">Exam History</h2>
-        <div className="space-y-2">
-          {MOCK_RESULTS.map((result) => {
-            const subject = SUBJECTS.find((s) => s.id === result.subject);
-            return (
-              <div key={result.examId} className="flex items-center justify-between rounded-xl border border-border bg-card p-3 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{subject?.icon}</span>
-                  <div>
-                    <p className="text-sm font-medium text-card-foreground">{subject?.name}</p>
-                    <p className="text-xs text-muted-foreground">{result.dateTaken}</p>
-                  </div>
-                </div>
-                <span className={`text-sm font-bold ${result.percentage >= 80 ? "text-success" : result.percentage >= 60 ? "text-warning" : "text-destructive"}`}>
-                  {result.score}/{result.total}
-                </span>
-              </div>
-            );
-          })}
         </div>
       </div>
 
@@ -72,6 +121,7 @@ const Profile = () => {
           {settingsItems.map((item, i) => (
             <button
               key={item.label}
+              onClick={item.action}
               className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted ${
                 i < settingsItems.length - 1 ? "border-b border-border" : ""
               }`}
@@ -86,6 +136,35 @@ const Profile = () => {
           ))}
         </div>
       </div>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div>
+              <label className="text-sm font-medium text-foreground">Display Name</label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Your name" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">Grade</label>
+              <Select value={editGrade} onValueChange={setEditGrade}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {GRADES.map((g) => (
+                    <SelectItem key={g} value={String(g)}>Grade {g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
