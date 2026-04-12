@@ -13,8 +13,7 @@ const navItems = [
 const BottomNav = () => {
   const location = useLocation();
 
-  // Hide nav during exam
-  if (location.pathname.startsWith("/exam/")) return null;
+  if (location.pathname.startsWith("/exam/") || location.pathname === "/auth" || location.pathname === "/privacy") return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md safe-bottom">
