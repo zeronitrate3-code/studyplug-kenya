@@ -1,19 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { MOCK_EXAM } from "@/lib/mockData";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { getQuestionsForSubject } from "@/lib/questionBank";
+import { SUBJECTS } from "@/lib/mockData";
 import { ArrowLeft, Clock, CheckCircle, XCircle } from "lucide-react";
 
 type Phase = "intro" | "active" | "results";
 
 const ExamTaking = () => {
   const { subjectId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const exam = MOCK_EXAM; // In production, fetch by subjectId + grade
+  const grade = Number(searchParams.get("grade")) || 7;
+
+  const questions = getQuestionsForSubject(subjectId || "");
+  const subject = SUBJECTS.find((s) => s.id === subjectId);
+  const timeLimit = questions.length * 120; // 2 min per question
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState<(number | null)[]>(new Array(exam.questions.length).fill(null));
-  const [timeLeft, setTimeLeft] = useState(exam.timeLimit);
+  const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null));
+  const [timeLeft, setTimeLeft] = useState(timeLimit);
 
   useEffect(() => {
     if (phase !== "active") return;
@@ -26,17 +32,30 @@ const ExamTaking = () => {
     setAnswers((prev) => { const n = [...prev]; n[currentQ] = idx; return n; });
   }, [currentQ]);
 
-  const score = answers.reduce<number>((acc, ans, i) => acc + (ans === exam.questions[i].correctAnswer ? 1 : 0), 0);
-  const percentage = Math.round((score / exam.questions.length) * 100);
+  const score = answers.reduce<number>((acc, ans, i) => acc + (ans === questions[i]?.correctAnswer ? 1 : 0), 0);
+  const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
+
+  if (questions.length === 0) {
+    return (
+      <div className="animate-fade-in flex flex-col items-center justify-center min-h-screen px-6 text-center">
+        <span className="text-5xl mb-4">🚧</span>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Coming Soon!</h1>
+        <p className="text-muted-foreground mb-6">Questions for {subject?.name || "this subject"} are being prepared. Check back soon!</p>
+        <button onClick={() => navigate(-1)} className="rounded-xl gradient-primary px-8 py-3 text-primary-foreground font-semibold shadow-lg">
+          ← Go Back
+        </button>
+      </div>
+    );
+  }
 
   if (phase === "intro") {
     return (
       <div className="animate-fade-in flex flex-col items-center justify-center min-h-screen px-6 text-center">
-        <span className="text-5xl mb-4">📝</span>
-        <h1 className="text-2xl font-bold text-foreground mb-2">{exam.title}</h1>
-        <p className="text-muted-foreground mb-1">{exam.questions.length} questions • {Math.floor(exam.timeLimit / 60)} minutes</p>
+        <span className="text-5xl mb-4">{subject?.icon || "📝"}</span>
+        <h1 className="text-2xl font-bold text-foreground mb-2">{subject?.name || "Exam"} - Grade {grade}</h1>
+        <p className="text-muted-foreground mb-1">{questions.length} questions • {Math.floor(timeLimit / 60)} minutes</p>
         <p className="text-sm text-muted-foreground mb-8">Answer all questions before time runs out!</p>
         <button onClick={() => setPhase("active")} className="rounded-xl gradient-primary px-8 py-3 text-primary-foreground font-semibold shadow-lg animate-pulse-glow">
           Start Exam
@@ -55,12 +74,12 @@ const ExamTaking = () => {
           <div className={`text-4xl font-bold mt-2 ${percentage >= 80 ? "text-success" : percentage >= 60 ? "text-warning" : "text-destructive"}`}>
             {percentage}%
           </div>
-          <p className="text-muted-foreground">{score}/{exam.questions.length} correct</p>
+          <p className="text-muted-foreground">{score}/{questions.length} correct</p>
         </div>
 
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">Review Answers</h2>
-          {exam.questions.map((q, i) => {
+          {questions.map((q, i) => {
             const isCorrect = answers[i] === q.correctAnswer;
             return (
               <div key={q.id} className={`rounded-xl border p-4 ${isCorrect ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5"}`}>
@@ -85,11 +104,10 @@ const ExamTaking = () => {
     );
   }
 
-  const q = exam.questions[currentQ];
+  const q = questions[currentQ];
 
   return (
     <div className="animate-fade-in min-h-screen flex flex-col px-4 pt-4 pb-6 max-w-lg mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button onClick={() => navigate(-1)} className="text-muted-foreground"><ArrowLeft className="h-5 w-5" /></button>
         <div className="flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5">
@@ -100,18 +118,16 @@ const ExamTaking = () => {
         </div>
       </div>
 
-      {/* Progress */}
       <div className="flex gap-1 mb-6">
-        {exam.questions.map((_, i) => (
+        {questions.map((_, i) => (
           <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
             i === currentQ ? "gradient-primary" : answers[i] !== null ? "bg-primary/40" : "bg-muted"
           }`} />
         ))}
       </div>
 
-      {/* Question */}
       <div className="flex-1">
-        <p className="text-xs text-muted-foreground mb-1">Question {currentQ + 1} of {exam.questions.length}</p>
+        <p className="text-xs text-muted-foreground mb-1">Question {currentQ + 1} of {questions.length}</p>
         <h2 className="text-xl font-bold text-foreground mb-6">{q.question}</h2>
 
         <div className="space-y-3">
@@ -134,14 +150,13 @@ const ExamTaking = () => {
         </div>
       </div>
 
-      {/* Navigation */}
       <div className="flex gap-3 mt-6">
         {currentQ > 0 && (
           <button onClick={() => setCurrentQ(currentQ - 1)} className="flex-1 rounded-xl border border-border py-3 text-sm font-semibold text-foreground">
             Previous
           </button>
         )}
-        {currentQ < exam.questions.length - 1 ? (
+        {currentQ < questions.length - 1 ? (
           <button
             onClick={() => setCurrentQ(currentQ + 1)}
             className="flex-1 rounded-xl gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-md"
