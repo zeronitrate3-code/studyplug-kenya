@@ -4,9 +4,9 @@ import { NavLink, useLocation } from "react-router-dom";
 const navItems = [
   { to: "/", icon: Home, label: "Home" },
   { to: "/exams", icon: FileText, label: "Exams" },
+  { to: "/chat", icon: MessageCircle, label: "Chat" },
   { to: "/trivia", icon: Brain, label: "Trivia" },
   { to: "/leaderboard", icon: Trophy, label: "Ranks" },
-  { to: "/support", icon: HelpCircle, label: "Support" },
   { to: "/profile", icon: User, label: "Profile" },
 ];
 
