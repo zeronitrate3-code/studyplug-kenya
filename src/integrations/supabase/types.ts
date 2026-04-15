@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          flagged: boolean | null
+          id: string
+          image_url: string | null
+          room_id: string
+          text: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          flagged?: boolean | null
+          id?: string
+          image_url?: string | null
+          room_id: string
+          text?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          flagged?: boolean | null
+          id?: string
+          image_url?: string | null
+          room_id?: string
+          text?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_rooms: {
+        Row: {
+          created_at: string
+          description: string | null
+          grade_level: number | null
+          icon: string | null
+          id: string
+          member_count: number | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          grade_level?: number | null
+          icon?: string | null
+          id?: string
+          member_count?: number | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          grade_level?: number | null
+          icon?: string | null
+          id?: string
+          member_count?: number | null
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
