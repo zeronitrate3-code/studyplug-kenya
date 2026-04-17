@@ -88,6 +88,45 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_results: {
+        Row: {
+          created_at: string
+          grade: number
+          id: string
+          percentage: number
+          points: number
+          score: number
+          subject_id: string
+          subject_name: string
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          grade: number
+          id?: string
+          percentage: number
+          points?: number
+          score: number
+          subject_id: string
+          subject_name: string
+          total_questions: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          grade?: number
+          id?: string
+          percentage?: number
+          points?: number
+          score?: number
+          subject_id?: string
+          subject_name?: string
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -120,7 +159,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      leaderboard: {
+        Row: {
+          avatar_url: string | null
+          avg_percentage: number | null
+          display_name: string | null
+          exams_taken: number | null
+          grade: number | null
+          total_points: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
