@@ -11,6 +11,7 @@ import ExamTaking from "./pages/ExamTaking";
 import Leaderboard from "./pages/Leaderboard";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
+import People from "./pages/People";
 import Auth from "./pages/Auth";
 import Trivia from "./pages/Trivia";
 import Support from "./pages/Support";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/trivia" element={<Trivia />} />
             <Route path="/support" element={<Support />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/people" element={<People />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/install" element={<Install />} />
             <Route path="*" element={<NotFound />} />

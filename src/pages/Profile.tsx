@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import RankBadge from "@/components/RankBadge";
-import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText } from "lucide-react";
+import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText, Users } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,6 +81,7 @@ const Profile = () => {
         setEditOpen(true);
       }
     },
+    { icon: Users, label: "Find People", desc: "Browse users & add friends", action: () => navigate("/people") },
     { icon: Bell, label: "Notifications", desc: "Manage alerts" },
     { icon: Shield, label: "Privacy Controls", desc: "Data & privacy" },
     { icon: FileText, label: "Privacy Policy", desc: "Read our policy", action: () => navigate("/privacy") },
