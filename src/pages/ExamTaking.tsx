@@ -19,6 +19,10 @@ const ExamTaking = () => {
   const subject = SUBJECTS.find((s) => s.id === subjectId);
   const timeLimit = questions.length * 120; // 2 min per question
 
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const savedRef = useRef(false);
+
   const [phase, setPhase] = useState<Phase>("intro");
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null));
@@ -37,8 +41,31 @@ const ExamTaking = () => {
 
   const score = answers.reduce<number>((acc, ans, i) => acc + (ans === questions[i]?.correctAnswer ? 1 : 0), 0);
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+  const points = score * 10;
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
+
+  useEffect(() => {
+    if (phase !== "results" || savedRef.current || !user || questions.length === 0) return;
+    savedRef.current = true;
+    (async () => {
+      const { error } = await supabase.from("exam_results").insert({
+        user_id: user.id,
+        subject_id: subjectId || "",
+        subject_name: subject?.name || subjectId || "Exam",
+        grade,
+        score,
+        total_questions: questions.length,
+        percentage,
+        points,
+      });
+      if (error) {
+        toast({ title: "Couldn't save result", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Result saved!", description: `+${points} points added to your rank.` });
+      }
+    })();
+  }, [phase, user, subjectId, subject, grade, score, questions.length, percentage, points, toast]);
 
   if (questions.length === 0) {
     return (
