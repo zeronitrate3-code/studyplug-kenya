@@ -10,6 +10,8 @@ import Exams from "./pages/Exams";
 import ExamTaking from "./pages/ExamTaking";
 import Leaderboard from "./pages/Leaderboard";
 import Chat from "./pages/Chat";
+import CreateRoom from "./pages/CreateRoom";
+import AITutor from "./pages/AITutor";
 import Profile from "./pages/Profile";
 import People from "./pages/People";
 import Auth from "./pages/Auth";
@@ -35,6 +37,8 @@ const App = () => (
             <Route path="/exam/:subjectId" element={<ExamTaking />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/chat/new" element={<CreateRoom />} />
+            <Route path="/ai-tutor" element={<AITutor />} />
             <Route path="/trivia" element={<Trivia />} />
             <Route path="/support" element={<Support />} />
             <Route path="/profile" element={<Profile />} />
