@@ -20,6 +20,8 @@ interface LeaderboardRow {
 
 const Leaderboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const onlineIds = usePresenceState();
   const [filter, setFilter] = useState<"all" | "grade" | "friends">("all");
   const [grade, setGrade] = useState(7);
   const [showRanks, setShowRanks] = useState(false);
