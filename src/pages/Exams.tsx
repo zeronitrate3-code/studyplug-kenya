@@ -114,15 +114,21 @@ const Exams = () => {
           <h2 className="text-lg font-semibold text-foreground">Past Exams</h2>
         </div>
         <div className="space-y-2">
-          {MOCK_RESULTS.map((result) => {
-            const subject = SUBJECTS.find((s) => s.id === result.subject);
+          {pastExams.length === 0 && (
+            <div className="rounded-xl border border-dashed border-border bg-card/50 p-6 text-center">
+              <p className="text-sm text-muted-foreground">No exams yet — take one above to see your history here!</p>
+            </div>
+          )}
+          {pastExams.map((result) => {
+            const subject = SUBJECTS.find((s) => s.id === result.subject_id);
+            const dateLabel = new Date(result.created_at).toLocaleDateString();
             return (
-              <div key={result.examId} className="flex items-center justify-between rounded-xl border border-border bg-card p-3 shadow-sm">
+              <div key={result.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-3 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{subject?.icon}</span>
+                  <span className="text-xl">{subject?.icon ?? "📘"}</span>
                   <div>
-                    <p className="text-sm font-medium text-card-foreground">{subject?.name}</p>
-                    <p className="text-xs text-muted-foreground">{result.dateTaken} • {result.score}/{result.total}</p>
+                    <p className="text-sm font-medium text-card-foreground">{result.subject_name}</p>
+                    <p className="text-xs text-muted-foreground">{dateLabel} • {result.score}/{result.total_questions}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
