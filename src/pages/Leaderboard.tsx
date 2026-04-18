@@ -5,6 +5,8 @@ import { getRankForPoints, getNextRank, getProgressToNextRank, RANK_TIERS } from
 import RankBadge from "@/components/RankBadge";
 import { ChevronDown, Trophy, Info, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useNavigate } from "react-router-dom";
+import { usePresenceState } from "@/hooks/usePresence";
 
 interface LeaderboardRow {
   user_id: string;
