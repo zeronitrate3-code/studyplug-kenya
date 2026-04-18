@@ -1,7 +1,11 @@
-import { useState } from "react";
-import { MOCK_RESULTS, SUBJECTS, getSubjectGroupsForGrade } from "@/lib/mockData";
+import { useEffect, useState } from "react";
+import { SUBJECTS, getSubjectGroupsForGrade } from "@/lib/mockData";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, Play, History, BarChart2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+const GRADE_KEY = "studyplug:selectedGrade";
 
 const SubjectRow = ({ subject, grade, navigate }: { subject: { id: string; name: string; icon: string }; grade: number; navigate: ReturnType<typeof useNavigate> }) => (
   <button
@@ -21,9 +25,56 @@ const SubjectRow = ({ subject, grade, navigate }: { subject: { id: string; name:
   </button>
 );
 
+interface PastExam {
+  id: string;
+  subject_id: string;
+  subject_name: string;
+  score: number;
+  total_questions: number;
+  percentage: number;
+  created_at: string;
+}
+
 const Exams = () => {
-  const [grade, setGrade] = useState(7);
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
+
+  // Initialize from localStorage → profile → 7
+  const [grade, setGrade] = useState<number>(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem(GRADE_KEY) : null;
+    return stored ? Number(stored) : 7;
+  });
+  const [pastExams, setPastExams] = useState<PastExam[]>([]);
+
+  // Once profile loads, prefer its grade if user hasn't picked locally yet
+  useEffect(() => {
+    const stored = localStorage.getItem(GRADE_KEY);
+    if (!stored && profile?.grade) setGrade(profile.grade);
+  }, [profile?.grade]);
+
+  // Persist grade to localStorage AND profile when it changes
+  const handleGradeChange = async (newGrade: number) => {
+    setGrade(newGrade);
+    localStorage.setItem(GRADE_KEY, String(newGrade));
+    if (user) {
+      await supabase.from("profiles").update({ grade: newGrade }).eq("user_id", user.id);
+      refreshProfile();
+    }
+  };
+
+  // Fetch user's real past exams
+  useEffect(() => {
+    if (!user) { setPastExams([]); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("exam_results")
+        .select("id,subject_id,subject_name,score,total_questions,percentage,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (data) setPastExams(data);
+    })();
+  }, [user]);
 
   const subjectGroups = getSubjectGroupsForGrade(grade);
 
