@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import RankBadge from "@/components/RankBadge";
-import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText, Users } from "lucide-react";
+import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText, Users, Lock, Unlock } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
