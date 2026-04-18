@@ -49,7 +49,15 @@ const BottomNav = () => {
     };
   }, [user]);
 
-  if (location.pathname.startsWith("/exam/") || location.pathname === "/auth" || location.pathname === "/privacy" || location.pathname === "/install" || location.pathname === "/chat") return null;
+  if (
+    location.pathname.startsWith("/exam/") ||
+    location.pathname === "/auth" ||
+    location.pathname === "/privacy" ||
+    location.pathname === "/install" ||
+    location.pathname === "/chat" ||
+    location.pathname === "/chat/new" ||
+    location.pathname === "/ai-tutor"
+  ) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-md safe-bottom">
