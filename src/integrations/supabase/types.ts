@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_tutor_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           avatar_url: string | null
@@ -61,28 +88,37 @@ export type Database = {
       chat_rooms: {
         Row: {
           created_at: string
+          created_by: string | null
           description: string | null
           grade_level: number | null
           icon: string | null
           id: string
+          image_url: string | null
+          is_custom: boolean
           member_count: number | null
           name: string
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           description?: string | null
           grade_level?: number | null
           icon?: string | null
           id?: string
+          image_url?: string | null
+          is_custom?: boolean
           member_count?: number | null
           name: string
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           description?: string | null
           grade_level?: number | null
           icon?: string | null
           id?: string
+          image_url?: string | null
+          is_custom?: boolean
           member_count?: number | null
           name?: string
         }
@@ -161,6 +197,8 @@ export type Database = {
           display_name: string | null
           grade: number | null
           id: string
+          is_private: boolean
+          last_seen_at: string | null
           updated_at: string
           user_id: string
         }
@@ -170,6 +208,8 @@ export type Database = {
           display_name?: string | null
           grade?: number | null
           id?: string
+          is_private?: boolean
+          last_seen_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -179,6 +219,8 @@ export type Database = {
           display_name?: string | null
           grade?: number | null
           id?: string
+          is_private?: boolean
+          last_seen_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -200,7 +242,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      can_view_full_profile: {
+        Args: { _target: string; _viewer: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
