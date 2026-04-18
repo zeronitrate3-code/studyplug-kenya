@@ -13,6 +13,9 @@ interface ChatRoom {
   icon: string;
   grade_level: number | null;
   member_count: number;
+  image_url?: string | null;
+  is_custom?: boolean;
+  created_by?: string | null;
 }
 
 interface ChatMessage {
