@@ -51,6 +51,7 @@ const BottomNav = () => {
 
   if (
     location.pathname.startsWith("/exam/") ||
+    location.pathname.startsWith("/profile/") ||
     location.pathname === "/auth" ||
     location.pathname === "/privacy" ||
     location.pathname === "/install" ||
