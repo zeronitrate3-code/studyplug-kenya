@@ -85,7 +85,7 @@ const Exams = () => {
         <div className="relative">
           <select
             value={grade}
-            onChange={(e) => setGrade(Number(e.target.value))}
+            onChange={(e) => handleGradeChange(Number(e.target.value))}
             className="appearance-none rounded-lg border border-border bg-card px-3 py-2 pr-8 text-sm font-medium text-foreground shadow-sm"
           >
             {Array.from({ length: 10 }, (_, i) => (
