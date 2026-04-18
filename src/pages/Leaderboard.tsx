@@ -18,10 +18,11 @@ interface LeaderboardRow {
 
 const Leaderboard = () => {
   const { user } = useAuth();
-  const [filter, setFilter] = useState<"all" | "grade">("all");
+  const [filter, setFilter] = useState<"all" | "grade" | "friends">("all");
   const [grade, setGrade] = useState(7);
   const [showRanks, setShowRanks] = useState(false);
   const [rows, setRows] = useState<LeaderboardRow[]>([]);
+  const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,8 +42,30 @@ const Leaderboard = () => {
     return () => { active = false; };
   }, []);
 
-  const students = (filter === "grade" ? rows.filter((s) => s.grade === grade) : rows)
-    .filter((s) => s.exams_taken > 0 || s.user_id === user?.id);
+  // Fetch accepted friend IDs for the friends-only tab
+  useEffect(() => {
+    if (!user) { setFriendIds(new Set()); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("friendships")
+        .select("requester_id,addressee_id")
+        .eq("status", "accepted")
+        .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+      const ids = new Set<string>();
+      data?.forEach((f) => {
+        ids.add(f.requester_id === user.id ? f.addressee_id : f.requester_id);
+      });
+      ids.add(user.id); // include self in friends leaderboard
+      setFriendIds(ids);
+    })();
+  }, [user]);
+
+  const students = (() => {
+    let list = rows;
+    if (filter === "grade") list = list.filter((s) => s.grade === grade);
+    else if (filter === "friends") list = list.filter((s) => friendIds.has(s.user_id));
+    return list.filter((s) => s.exams_taken > 0 || s.user_id === user?.id);
+  })();
 
   return (
     <div className="animate-fade-in space-y-6 pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -72,7 +95,7 @@ const Leaderboard = () => {
       )}
 
       <div className="flex gap-2">
-        {(["all", "grade"] as const).map((f) => (
+        {(["all", "grade", "friends"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -80,7 +103,7 @@ const Leaderboard = () => {
               filter === f ? "gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground"
             }`}
           >
-            {f === "all" ? "Global" : "By Grade"}
+            {f === "all" ? "Global" : f === "grade" ? "By Grade" : "Friends"}
           </button>
         ))}
       </div>
