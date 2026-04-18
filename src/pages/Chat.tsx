@@ -197,9 +197,19 @@ const Chat = () => {
           )}
           {messages.map((msg) => {
             const isMe = msg.user_id === user.id;
+            const initial = (msg.display_name || "S").charAt(0).toUpperCase();
             return (
-              <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+              <div key={msg.id} className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+                {!isMe && (
+                  <div className="h-7 w-7 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center text-[10px] font-bold text-foreground">
+                    {msg.avatar_url ? (
+                      <img src={msg.avatar_url} alt={msg.display_name || "user"} className="h-full w-full object-cover" />
+                    ) : (
+                      initial
+                    )}
+                  </div>
+                )}
+                <div className={`max-w-[75%] rounded-2xl px-4 py-2 ${
                   isMe
                     ? "gradient-primary text-primary-foreground rounded-br-md"
                     : "bg-muted text-foreground rounded-bl-md"
@@ -220,6 +230,15 @@ const Chat = () => {
                     )}
                   </div>
                 </div>
+                {isMe && (
+                  <div className="h-7 w-7 shrink-0 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="me" className="h-full w-full object-cover" />
+                    ) : (
+                      (profile?.display_name || "M").charAt(0).toUpperCase()
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
