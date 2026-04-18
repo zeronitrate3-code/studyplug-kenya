@@ -8,6 +8,8 @@ interface Profile {
   display_name: string | null;
   avatar_url: string | null;
   grade: number | null;
+  is_private?: boolean;
+  last_seen_at?: string | null;
 }
 
 interface AuthContextType {
