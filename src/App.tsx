@@ -32,6 +32,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <PresenceTracker />
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/trivia" element={<Trivia />} />
             <Route path="/support" element={<Support />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<PublicProfile />} />
             <Route path="/people" element={<People />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/install" element={<Install />} />
