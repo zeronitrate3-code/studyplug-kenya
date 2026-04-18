@@ -166,12 +166,22 @@ const Leaderboard = () => {
           const progress = getProgressToNextRank(s.total_points);
           const name = s.display_name || "Student";
           const isMe = s.user_id === user?.id;
+          const isOnline = onlineIds.has(s.user_id);
           return (
-            <div key={s.user_id} className={`rounded-xl border p-3 shadow-sm space-y-2 ${isMe ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
+            <button
+              key={s.user_id}
+              onClick={() => navigate(`/profile/${s.user_id}`)}
+              className={`w-full text-left rounded-xl border p-3 shadow-sm space-y-2 transition-all hover:shadow-md active:scale-[0.99] ${isMe ? "border-primary bg-primary/5" : "border-border bg-card"}`}
+            >
               <div className="flex items-center gap-3">
                 <RankBadge rank={i + 1} />
-                <div className="w-9 h-9 rounded-full gradient-hero flex items-center justify-center text-primary-foreground font-bold text-xs overflow-hidden">
-                  {s.avatar_url ? <img src={s.avatar_url} alt={name} className="w-full h-full object-cover" /> : name.charAt(0)}
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-full gradient-hero flex items-center justify-center text-primary-foreground font-bold text-xs overflow-hidden">
+                    {s.avatar_url ? <img src={s.avatar_url} alt={name} className="w-full h-full object-cover" /> : name.charAt(0)}
+                  </div>
+                  {isOnline && (
+                    <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success ring-2 ring-card" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-card-foreground truncate">
@@ -195,7 +205,7 @@ const Leaderboard = () => {
                   <span className="text-[10px] text-muted-foreground whitespace-nowrap">{nextRank.icon} {nextRank.minPoints - s.total_points} to go</span>
                 </div>
               )}
-            </div>
+            </button>
           );
         })}
       </div>
