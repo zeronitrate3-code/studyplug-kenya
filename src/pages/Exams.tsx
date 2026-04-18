@@ -1,7 +1,11 @@
-import { useState } from "react";
-import { MOCK_RESULTS, SUBJECTS, getSubjectGroupsForGrade } from "@/lib/mockData";
+import { useEffect, useState } from "react";
+import { SUBJECTS, getSubjectGroupsForGrade } from "@/lib/mockData";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, Play, History, BarChart2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+const GRADE_KEY = "studyplug:selectedGrade";
 
 const SubjectRow = ({ subject, grade, navigate }: { subject: { id: string; name: string; icon: string }; grade: number; navigate: ReturnType<typeof useNavigate> }) => (
   <button
@@ -21,9 +25,56 @@ const SubjectRow = ({ subject, grade, navigate }: { subject: { id: string; name:
   </button>
 );
 
+interface PastExam {
+  id: string;
+  subject_id: string;
+  subject_name: string;
+  score: number;
+  total_questions: number;
+  percentage: number;
+  created_at: string;
+}
+
 const Exams = () => {
-  const [grade, setGrade] = useState(7);
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
+
+  // Initialize from localStorage → profile → 7
+  const [grade, setGrade] = useState<number>(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem(GRADE_KEY) : null;
+    return stored ? Number(stored) : 7;
+  });
+  const [pastExams, setPastExams] = useState<PastExam[]>([]);
+
+  // Once profile loads, prefer its grade if user hasn't picked locally yet
+  useEffect(() => {
+    const stored = localStorage.getItem(GRADE_KEY);
+    if (!stored && profile?.grade) setGrade(profile.grade);
+  }, [profile?.grade]);
+
+  // Persist grade to localStorage AND profile when it changes
+  const handleGradeChange = async (newGrade: number) => {
+    setGrade(newGrade);
+    localStorage.setItem(GRADE_KEY, String(newGrade));
+    if (user) {
+      await supabase.from("profiles").update({ grade: newGrade }).eq("user_id", user.id);
+      refreshProfile();
+    }
+  };
+
+  // Fetch user's real past exams
+  useEffect(() => {
+    if (!user) { setPastExams([]); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("exam_results")
+        .select("id,subject_id,subject_name,score,total_questions,percentage,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (data) setPastExams(data);
+    })();
+  }, [user]);
 
   const subjectGroups = getSubjectGroupsForGrade(grade);
 
@@ -34,7 +85,7 @@ const Exams = () => {
         <div className="relative">
           <select
             value={grade}
-            onChange={(e) => setGrade(Number(e.target.value))}
+            onChange={(e) => handleGradeChange(Number(e.target.value))}
             className="appearance-none rounded-lg border border-border bg-card px-3 py-2 pr-8 text-sm font-medium text-foreground shadow-sm"
           >
             {Array.from({ length: 10 }, (_, i) => (
@@ -63,15 +114,21 @@ const Exams = () => {
           <h2 className="text-lg font-semibold text-foreground">Past Exams</h2>
         </div>
         <div className="space-y-2">
-          {MOCK_RESULTS.map((result) => {
-            const subject = SUBJECTS.find((s) => s.id === result.subject);
+          {pastExams.length === 0 && (
+            <div className="rounded-xl border border-dashed border-border bg-card/50 p-6 text-center">
+              <p className="text-sm text-muted-foreground">No exams yet — take one above to see your history here!</p>
+            </div>
+          )}
+          {pastExams.map((result) => {
+            const subject = SUBJECTS.find((s) => s.id === result.subject_id);
+            const dateLabel = new Date(result.created_at).toLocaleDateString();
             return (
-              <div key={result.examId} className="flex items-center justify-between rounded-xl border border-border bg-card p-3 shadow-sm">
+              <div key={result.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-3 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{subject?.icon}</span>
+                  <span className="text-xl">{subject?.icon ?? "📘"}</span>
                   <div>
-                    <p className="text-sm font-medium text-card-foreground">{subject?.name}</p>
-                    <p className="text-xs text-muted-foreground">{result.dateTaken} • {result.score}/{result.total}</p>
+                    <p className="text-sm font-medium text-card-foreground">{result.subject_name}</p>
+                    <p className="text-xs text-muted-foreground">{dateLabel} • {result.score}/{result.total_questions}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

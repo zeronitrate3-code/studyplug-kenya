@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import RankBadge from "@/components/RankBadge";
-import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText, Users } from "lucide-react";
+import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText, Users, Lock, Unlock } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +72,21 @@ const Profile = () => {
   const displayName = profile.display_name || user.email?.split("@")[0] || "Student";
   const initials = displayName.charAt(0).toUpperCase();
 
+  const togglePrivacy = async () => {
+    if (!user || !profile) return;
+    const next = !profile.is_private;
+    const { error } = await supabase.from("profiles").update({ is_private: next }).eq("user_id", user.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    await refreshProfile();
+    toast({
+      title: next ? "Profile is now private" : "Profile is now public",
+      description: next ? "Only friends can see your stats." : "Anyone can view your profile.",
+    });
+  };
+
   const settingsItems = [
     {
       icon: Settings, label: "Edit Profile", desc: "Name & grade",
@@ -82,8 +97,13 @@ const Profile = () => {
       }
     },
     { icon: Users, label: "Find People", desc: "Browse users & add friends", action: () => navigate("/people") },
+    {
+      icon: profile.is_private ? Lock : Unlock,
+      label: profile.is_private ? "Profile: Private 🔒" : "Profile: Public 🌍",
+      desc: profile.is_private ? "Only friends see your stats — tap to change" : "Anyone can see your stats — tap to lock",
+      action: togglePrivacy,
+    },
     { icon: Bell, label: "Notifications", desc: "Manage alerts" },
-    { icon: Shield, label: "Privacy Controls", desc: "Data & privacy" },
     { icon: FileText, label: "Privacy Policy", desc: "Read our policy", action: () => navigate("/privacy") },
     { icon: HelpCircle, label: "Help & FAQ", desc: "Get support" },
     { icon: LogOut, label: "Log Out", desc: "Sign out", destructive: true, action: handleSignOut },

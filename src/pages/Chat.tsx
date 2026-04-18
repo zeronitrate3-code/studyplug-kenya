@@ -13,6 +13,9 @@ interface ChatRoom {
   icon: string;
   grade_level: number | null;
   member_count: number;
+  image_url?: string | null;
+  is_custom?: boolean;
+  created_by?: string | null;
 }
 
 interface ChatMessage {
@@ -157,17 +160,34 @@ const Chat = () => {
     return (
       <div className="animate-fade-in flex flex-col h-screen max-w-lg mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-          <button onClick={() => { setActiveRoom(null); setMessages([]); setShowEmoji(false); }}>
-            <ArrowLeft className="h-5 w-5 text-foreground" />
+        <div className="flex items-center gap-2 border-b border-border bg-card px-3 py-3">
+          <button
+            onClick={() => { setActiveRoom(null); setMessages([]); setShowEmoji(false); }}
+            className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-foreground hover:bg-muted transition-colors"
+            aria-label="Exit chat room"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="text-xs font-medium">Exit</span>
           </button>
-          <span className="text-xl">{room.icon}</span>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-foreground">{room.name}</p>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Users className="h-3 w-3" /> {room.description}
+          {room.image_url ? (
+            <img src={room.image_url} alt={room.name} className="h-8 w-8 rounded-full object-cover" />
+          ) : (
+            <span className="text-xl">{room.icon}</span>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">{room.name}</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+              <Users className="h-3 w-3 shrink-0" /> {room.description}
             </p>
           </div>
+          <button
+            onClick={() => { setActiveRoom(null); setMessages([]); setShowEmoji(false); navigate("/"); }}
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Close and go home"
+            title="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         {/* Messages */}
@@ -177,9 +197,19 @@ const Chat = () => {
           )}
           {messages.map((msg) => {
             const isMe = msg.user_id === user.id;
+            const initial = (msg.display_name || "S").charAt(0).toUpperCase();
             return (
-              <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+              <div key={msg.id} className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+                {!isMe && (
+                  <div className="h-7 w-7 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center text-[10px] font-bold text-foreground">
+                    {msg.avatar_url ? (
+                      <img src={msg.avatar_url} alt={msg.display_name || "user"} className="h-full w-full object-cover" />
+                    ) : (
+                      initial
+                    )}
+                  </div>
+                )}
+                <div className={`max-w-[75%] rounded-2xl px-4 py-2 ${
                   isMe
                     ? "gradient-primary text-primary-foreground rounded-br-md"
                     : "bg-muted text-foreground rounded-bl-md"
@@ -200,6 +230,15 @@ const Chat = () => {
                     )}
                   </div>
                 </div>
+                {isMe && (
+                  <div className="h-7 w-7 shrink-0 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="me" className="h-full w-full object-cover" />
+                    ) : (
+                      (profile?.display_name || "M").charAt(0).toUpperCase()
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -265,9 +304,31 @@ const Chat = () => {
 
   // Room list
   return (
-    <div className="animate-fade-in space-y-6 pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold text-foreground">Chat Rooms 💬</h1>
+    <div className="animate-fade-in space-y-4 pb-24 px-4 pt-6 max-w-lg mx-auto">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">Chat Rooms 💬</h1>
+        <button
+          onClick={() => navigate("/chat/new")}
+          className="rounded-lg gradient-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm"
+        >
+          + New Room
+        </button>
+      </div>
       <p className="text-sm text-muted-foreground">Join a room and discuss with fellow students</p>
+
+      {/* AI Tutor entry */}
+      <button
+        onClick={() => navigate("/ai-tutor")}
+        className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
+      >
+        <div className="h-10 w-10 rounded-full gradient-primary flex items-center justify-center text-lg">🤖</div>
+        <div className="flex-1 text-left">
+          <p className="text-sm font-semibold text-foreground">StudyPlug AI Tutor</p>
+          <p className="text-xs text-muted-foreground">Ask anything · upload homework photos</p>
+        </div>
+        <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary">NEW</span>
+      </button>
+
       {loading ? (
         <p className="text-center text-muted-foreground py-8">Loading rooms...</p>
       ) : (
@@ -278,12 +339,17 @@ const Chat = () => {
               onClick={() => setActiveRoom(room.id)}
               className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
             >
-              <span className="text-2xl">{room.icon}</span>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-card-foreground">{room.name}</p>
-                <p className="text-xs text-muted-foreground">
+              {room.image_url ? (
+                <img src={room.image_url} alt={room.name} className="h-10 w-10 rounded-full object-cover shrink-0" />
+              ) : (
+                <span className="text-2xl shrink-0">{room.icon}</span>
+              )}
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-semibold text-card-foreground truncate">{room.name}</p>
+                <p className="text-xs text-muted-foreground truncate">
                   {room.description}
                   {room.grade_level && ` • Grade ${room.grade_level}`}
+                  {room.is_custom && " • Custom"}
                 </p>
               </div>
             </button>
