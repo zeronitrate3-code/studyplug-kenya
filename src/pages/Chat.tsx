@@ -304,9 +304,31 @@ const Chat = () => {
 
   // Room list
   return (
-    <div className="animate-fade-in space-y-6 pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold text-foreground">Chat Rooms 💬</h1>
+    <div className="animate-fade-in space-y-4 pb-24 px-4 pt-6 max-w-lg mx-auto">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">Chat Rooms 💬</h1>
+        <button
+          onClick={() => navigate("/chat/new")}
+          className="rounded-lg gradient-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm"
+        >
+          + New Room
+        </button>
+      </div>
       <p className="text-sm text-muted-foreground">Join a room and discuss with fellow students</p>
+
+      {/* AI Tutor entry */}
+      <button
+        onClick={() => navigate("/ai-tutor")}
+        className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
+      >
+        <div className="h-10 w-10 rounded-full gradient-primary flex items-center justify-center text-lg">🤖</div>
+        <div className="flex-1 text-left">
+          <p className="text-sm font-semibold text-foreground">StudyPlug AI Tutor</p>
+          <p className="text-xs text-muted-foreground">Ask anything · upload homework photos</p>
+        </div>
+        <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary">NEW</span>
+      </button>
+
       {loading ? (
         <p className="text-center text-muted-foreground py-8">Loading rooms...</p>
       ) : (
@@ -317,12 +339,17 @@ const Chat = () => {
               onClick={() => setActiveRoom(room.id)}
               className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
             >
-              <span className="text-2xl">{room.icon}</span>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-card-foreground">{room.name}</p>
-                <p className="text-xs text-muted-foreground">
+              {room.image_url ? (
+                <img src={room.image_url} alt={room.name} className="h-10 w-10 rounded-full object-cover shrink-0" />
+              ) : (
+                <span className="text-2xl shrink-0">{room.icon}</span>
+              )}
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-semibold text-card-foreground truncate">{room.name}</p>
+                <p className="text-xs text-muted-foreground truncate">
                   {room.description}
                   {room.grade_level && ` • Grade ${room.grade_level}`}
+                  {room.is_custom && " • Custom"}
                 </p>
               </div>
             </button>
