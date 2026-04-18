@@ -157,17 +157,34 @@ const Chat = () => {
     return (
       <div className="animate-fade-in flex flex-col h-screen max-w-lg mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-          <button onClick={() => { setActiveRoom(null); setMessages([]); setShowEmoji(false); }}>
-            <ArrowLeft className="h-5 w-5 text-foreground" />
+        <div className="flex items-center gap-2 border-b border-border bg-card px-3 py-3">
+          <button
+            onClick={() => { setActiveRoom(null); setMessages([]); setShowEmoji(false); }}
+            className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-foreground hover:bg-muted transition-colors"
+            aria-label="Exit chat room"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="text-xs font-medium">Exit</span>
           </button>
-          <span className="text-xl">{room.icon}</span>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-foreground">{room.name}</p>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Users className="h-3 w-3" /> {room.description}
+          {room.image_url ? (
+            <img src={room.image_url} alt={room.name} className="h-8 w-8 rounded-full object-cover" />
+          ) : (
+            <span className="text-xl">{room.icon}</span>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">{room.name}</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+              <Users className="h-3 w-3 shrink-0" /> {room.description}
             </p>
           </div>
+          <button
+            onClick={() => { setActiveRoom(null); setMessages([]); setShowEmoji(false); navigate("/"); }}
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Close and go home"
+            title="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         {/* Messages */}
