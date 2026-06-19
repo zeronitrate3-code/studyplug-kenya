@@ -413,80 +413,69 @@ const aliases: Record<string, string> = {
   "creative-writing": "literature",
 };
 
+// Merge extras into base — extras are appended after originals so the cursor
+// naturally moves on to fresh questions once the original set is exhausted.
+const questionBank: Record<string, Question[]> = (() => {
+  const merged: Record<string, Question[]> = { ...baseBank };
+  for (const [key, list] of Object.entries(extraQuestions)) {
+    merged[key] = [...(merged[key] || []), ...list];
+  }
+  return merged;
+})();
+
 function getBank(subjectId: string): Question[] {
   return questionBank[subjectId] || questionBank[aliases[subjectId] || ""] || [];
 }
 
-const HISTORY_PREFIX = "studyplug:seenQs:";
+const CURSOR_PREFIX = "studyplug:cursor:";
 const EXAM_SIZE = 5;
 
-function loadSeen(subjectId: string): Set<string> {
-  if (typeof window === "undefined") return new Set();
+function loadCursor(subjectId: string): number {
+  if (typeof window === "undefined") return 0;
   try {
-    const raw = localStorage.getItem(HISTORY_PREFIX + subjectId);
-    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+    const raw = localStorage.getItem(CURSOR_PREFIX + subjectId);
+    const n = raw ? parseInt(raw, 10) : 0;
+    return Number.isFinite(n) && n >= 0 ? n : 0;
   } catch {
-    return new Set();
+    return 0;
   }
 }
 
-function saveSeen(subjectId: string, ids: string[]) {
+function saveCursor(subjectId: string, cursor: number) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(HISTORY_PREFIX + subjectId, JSON.stringify(ids));
+    localStorage.setItem(CURSOR_PREFIX + subjectId, String(cursor));
   } catch {
     /* ignore */
   }
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 /**
- * Returns a randomized subset of questions for the subject.
- * Tracks recently-shown questions in localStorage to avoid repeating the same
- * set every time. Once nearly all have been seen, the history resets so the
- * student can keep practicing without running out of questions.
+ * Returns the next batch of questions for the subject, IN ORDER.
+ * Each call advances the cursor so the student gets NEW questions on the next
+ * attempt. When the bank is exhausted, it wraps back to the start.
+ * No shuffling of questions or options.
  */
 export function getQuestionsForSubject(subjectId: string): Question[] {
   const bank = getBank(subjectId);
   if (bank.length === 0) return [];
-  if (bank.length <= EXAM_SIZE) return shuffle(bank);
 
-  let seen = loadSeen(subjectId);
-  let unseen = bank.filter((q) => !seen.has(q.id));
+  const size = Math.min(EXAM_SIZE, bank.length);
+  let cursor = loadCursor(subjectId) % bank.length;
 
-  // If too few unseen left, reset history so they cycle through again.
-  if (unseen.length < EXAM_SIZE) {
-    seen = new Set();
-    unseen = bank;
+  const picked: Question[] = [];
+  for (let i = 0; i < size; i++) {
+    picked.push(bank[(cursor + i) % bank.length]);
   }
 
-  const picked = shuffle(unseen).slice(0, EXAM_SIZE);
-  const newSeen = [...Array.from(seen), ...picked.map((q) => q.id)];
-  saveSeen(subjectId, newSeen);
-
-  // Also shuffle option order per question for added variety
-  return picked.map((q) => {
-    const indexed = q.options.map((opt, i) => ({ opt, i }));
-    const shuffled = shuffle(indexed);
-    const newCorrect = shuffled.findIndex((o) => o.i === q.correctAnswer);
-    return {
-      ...q,
-      options: shuffled.map((o) => o.opt),
-      correctAnswer: newCorrect,
-    };
-  });
+  saveCursor(subjectId, (cursor + size) % bank.length);
+  return picked;
 }
 
 export function hasQuestions(subjectId: string): boolean {
   return getBank(subjectId).length > 0;
 }
 
+// Aliases moved above getBank() reference
 export default questionBank;
+
