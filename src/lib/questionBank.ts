@@ -1,7 +1,9 @@
 import type { Question } from "./mockData";
+import { extraQuestions } from "./questionBankExtra";
 
-// Large question bank — each exam draws a random subset, avoiding recently-seen IDs.
-const questionBank: Record<string, Question[]> = {
+// Large question bank — exams serve questions sequentially in declared order.
+// After each attempt the cursor advances so students see NEW questions next time.
+const baseBank: Record<string, Question[]> = {
   // ============ MATHEMATICS ============
   mathematics: [
     { id: "math-1", question: "What is 1/2 + 1/4?", options: ["1/2", "3/4", "1/3", "2/3"], correctAnswer: 1, explanation: "1/2 = 2/4, so 2/4 + 1/4 = 3/4." },
