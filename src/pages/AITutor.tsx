@@ -356,16 +356,30 @@ const AITutor = () => {
 
       {/* Input */}
       <div className="border-t border-border bg-card p-3 safe-bottom">
+        {imageMode && (
+          <div className="mb-2 flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-xs text-primary">
+            <Wand2 className="h-3.5 w-3.5" />
+            <span className="flex-1">Image mode — describe an image to generate, or attach a photo to enhance.</span>
+          </div>
+        )}
         <div className="flex gap-2 items-center">
-          <button onClick={() => fileInputRef.current?.click()} className="text-muted-foreground hover:text-foreground" disabled={sending}>
+          <button onClick={() => fileInputRef.current?.click()} className="text-muted-foreground hover:text-foreground" disabled={sending} title="Attach photo">
             <ImageIcon className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => setImageMode((v) => !v)}
+            className={`rounded-lg p-1 transition-colors ${imageMode ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+            disabled={sending}
+            title="Toggle image generation mode"
+          >
+            <Wand2 className="h-5 w-5" />
           </button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPickImage} />
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-            placeholder="Ask the AI tutor..."
+            placeholder={imageMode ? "Describe the image to create…" : "Ask the AI tutor..."}
             disabled={sending}
             className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
           />
