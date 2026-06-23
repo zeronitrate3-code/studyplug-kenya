@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, Sparkles, Image as ImageIcon, X, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Image as ImageIcon, X, Trash2, Loader2, Wand2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 
@@ -14,6 +14,7 @@ interface TutorMsg {
 }
 
 const TUTOR_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-tutor`;
+const TUTOR_IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-tutor-image`;
 
 const AITutor = () => {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ const AITutor = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imageMode, setImageMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -77,6 +79,7 @@ const AITutor = () => {
     if (!user || sending) return;
     const text = input.trim();
     if (!text && !imageFile) return;
+    if (imageMode) return sendImage(text);
 
     setSending(true);
     let imgUrl: string | null = null;
@@ -188,6 +191,78 @@ const AITutor = () => {
     }
   };
 
+  const sendImage = async (text: string) => {
+    if (!user) return;
+    if (!text && !imageFile) return;
+    setSending(true);
+    try {
+      let imgUrl: string | null = null;
+      if (imageFile) {
+        imgUrl = await uploadImage(imageFile);
+        setImageFile(null);
+        setImagePreview(null);
+      }
+      const promptText = text || (imgUrl ? "Enhance and improve this photo" : "");
+
+      // Persist user message
+      const { data: insertedUser } = await supabase
+        .from("ai_tutor_messages")
+        .insert({ user_id: user.id, role: "user", content: promptText || "(image request)", image_url: imgUrl })
+        .select("id,role,content,image_url").single();
+      const userMsg: TutorMsg = insertedUser
+        ? (insertedUser as TutorMsg)
+        : { id: crypto.randomUUID(), role: "user", content: promptText, image_url: imgUrl };
+      setMessages((prev) => [...prev, userMsg]);
+      setInput("");
+
+      const placeholderId = crypto.randomUUID();
+      setMessages((prev) => [...prev, { id: placeholderId, role: "assistant", content: "🎨 Generating image…", image_url: null }]);
+
+      const resp = await fetch(TUTOR_IMAGE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ prompt: promptText, image_url: imgUrl }),
+      });
+
+      if (!resp.ok) {
+        if (resp.status === 429) toast({ title: "Slow down", description: "Too many requests." });
+        else if (resp.status === 402) toast({ title: "AI credits exhausted", variant: "destructive" });
+        else toast({ title: "Image AI error", description: "Could not generate image.", variant: "destructive" });
+        setMessages((prev) => prev.filter((m) => m.id !== placeholderId));
+        return;
+      }
+
+      const { image_b64 } = await resp.json();
+      // Upload generated image to storage so it persists
+      const bytes = Uint8Array.from(atob(image_b64), (c) => c.charCodeAt(0));
+      const path = `${user.id}/gen-${Date.now()}.png`;
+      const { error: upErr } = await supabase.storage.from("tutor-uploads").upload(path, bytes, { contentType: "image/png" });
+      let publicUrl: string;
+      if (upErr) {
+        publicUrl = `data:image/png;base64,${image_b64}`;
+      } else {
+        publicUrl = supabase.storage.from("tutor-uploads").getPublicUrl(path).data.publicUrl;
+      }
+
+      const caption = imgUrl ? "Here's your enhanced photo:" : "Here's the image you asked for:";
+      await supabase.from("ai_tutor_messages").insert({
+        user_id: user.id, role: "assistant", content: caption, image_url: publicUrl,
+      });
+      setMessages((prev) => prev.map((m) =>
+        m.id === placeholderId ? { ...m, content: caption, image_url: publicUrl } : m
+      ));
+    } catch (e) {
+      console.error("image gen error:", e);
+      toast({ title: "Connection error", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+
   const clearChat = async () => {
     if (!user) return;
     if (!confirm("Clear your entire AI tutor history?")) return;
@@ -281,16 +356,30 @@ const AITutor = () => {
 
       {/* Input */}
       <div className="border-t border-border bg-card p-3 safe-bottom">
+        {imageMode && (
+          <div className="mb-2 flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-xs text-primary">
+            <Wand2 className="h-3.5 w-3.5" />
+            <span className="flex-1">Image mode — describe an image to generate, or attach a photo to enhance.</span>
+          </div>
+        )}
         <div className="flex gap-2 items-center">
-          <button onClick={() => fileInputRef.current?.click()} className="text-muted-foreground hover:text-foreground" disabled={sending}>
+          <button onClick={() => fileInputRef.current?.click()} className="text-muted-foreground hover:text-foreground" disabled={sending} title="Attach photo">
             <ImageIcon className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => setImageMode((v) => !v)}
+            className={`rounded-lg p-1 transition-colors ${imageMode ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+            disabled={sending}
+            title="Toggle image generation mode"
+          >
+            <Wand2 className="h-5 w-5" />
           </button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPickImage} />
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-            placeholder="Ask the AI tutor..."
+            placeholder={imageMode ? "Describe the image to create…" : "Ask the AI tutor..."}
             disabled={sending}
             className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
           />
