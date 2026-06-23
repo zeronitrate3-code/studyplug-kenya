@@ -75,11 +75,20 @@ const AITutor = () => {
     return supabase.storage.from("tutor-uploads").getPublicUrl(path).data.publicUrl;
   };
 
+  const isUpscaleRequest = (t: string) =>
+    /\b(upscale|up-scale|4k|8k|hd|ultra[- ]?hd|enhance|sharpen|deblur|hi[- ]?res|high[- ]?res(olution)?|regenerate.*(photo|image|picture)|make.*(clearer|sharper|higher.?quality))\b/i.test(t);
+
+  const lastUserImage = () => [...messages].reverse().find((m) => m.role === "user" && m.image_url)?.image_url || null;
+
   const send = async () => {
     if (!user || sending) return;
     const text = input.trim();
     if (!text && !imageFile) return;
-    if (imageMode) return sendImage(text);
+    // Auto-route upscale/enhance requests to the image pipeline — no questions asked.
+    const hasImageContext = !!imageFile || !!lastUserImage();
+    if (imageMode || (hasImageContext && isUpscaleRequest(text))) {
+      return sendImage(text || "Upscale and regenerate this photo in ultra-sharp 4K quality");
+    }
 
     setSending(true);
     let imgUrl: string | null = null;
@@ -201,13 +210,20 @@ const AITutor = () => {
         imgUrl = await uploadImage(imageFile);
         setImageFile(null);
         setImagePreview(null);
+      } else {
+        // Fall back to the most recent uploaded photo so "upscale" works without re-attaching.
+        imgUrl = lastUserImage();
       }
-      const promptText = text || (imgUrl ? "Enhance and improve this photo" : "");
+      const upscaling = isUpscaleRequest(text);
+      const basePrompt = text || (imgUrl ? "Enhance and improve this photo" : "");
+      const promptText = upscaling && imgUrl
+        ? `Upscale and regenerate this photo at 4K ultra-high-resolution. Sharpen details, remove noise and blur, enhance lighting and colors, preserve the original subject, composition and identity exactly. ${basePrompt}`.trim()
+        : basePrompt;
 
       // Persist user message
       const { data: insertedUser } = await supabase
         .from("ai_tutor_messages")
-        .insert({ user_id: user.id, role: "user", content: promptText || "(image request)", image_url: imgUrl })
+        .insert({ user_id: user.id, role: "user", content: text || basePrompt || "(image request)", image_url: imageFile ? imgUrl : null })
         .select("id,role,content,image_url").single();
       const userMsg: TutorMsg = insertedUser
         ? (insertedUser as TutorMsg)
