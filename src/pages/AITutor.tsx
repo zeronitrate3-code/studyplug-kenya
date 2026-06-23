@@ -79,6 +79,7 @@ const AITutor = () => {
     if (!user || sending) return;
     const text = input.trim();
     if (!text && !imageFile) return;
+    if (imageMode) return sendImage(text);
 
     setSending(true);
     let imgUrl: string | null = null;
