@@ -75,11 +75,20 @@ const AITutor = () => {
     return supabase.storage.from("tutor-uploads").getPublicUrl(path).data.publicUrl;
   };
 
+  const isUpscaleRequest = (t: string) =>
+    /\b(upscale|up-scale|4k|8k|hd|ultra[- ]?hd|enhance|sharpen|deblur|hi[- ]?res|high[- ]?res(olution)?|regenerate.*(photo|image|picture)|make.*(clearer|sharper|higher.?quality))\b/i.test(t);
+
+  const lastUserImage = () => [...messages].reverse().find((m) => m.role === "user" && m.image_url)?.image_url || null;
+
   const send = async () => {
     if (!user || sending) return;
     const text = input.trim();
     if (!text && !imageFile) return;
-    if (imageMode) return sendImage(text);
+    // Auto-route upscale/enhance requests to the image pipeline — no questions asked.
+    const hasImageContext = !!imageFile || !!lastUserImage();
+    if (imageMode || (hasImageContext && isUpscaleRequest(text))) {
+      return sendImage(text || "Upscale and regenerate this photo in ultra-sharp 4K quality");
+    }
 
     setSending(true);
     let imgUrl: string | null = null;
