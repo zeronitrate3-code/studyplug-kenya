@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, Sparkles, Image as ImageIcon, X, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Image as ImageIcon, X, Trash2, Loader2, Wand2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 
@@ -14,6 +14,7 @@ interface TutorMsg {
 }
 
 const TUTOR_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-tutor`;
+const TUTOR_IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-tutor-image`;
 
 const AITutor = () => {
   const { user } = useAuth();
