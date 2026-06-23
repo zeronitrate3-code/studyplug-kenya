@@ -210,13 +210,20 @@ const AITutor = () => {
         imgUrl = await uploadImage(imageFile);
         setImageFile(null);
         setImagePreview(null);
+      } else {
+        // Fall back to the most recent uploaded photo so "upscale" works without re-attaching.
+        imgUrl = lastUserImage();
       }
-      const promptText = text || (imgUrl ? "Enhance and improve this photo" : "");
+      const upscaling = isUpscaleRequest(text);
+      const basePrompt = text || (imgUrl ? "Enhance and improve this photo" : "");
+      const promptText = upscaling && imgUrl
+        ? `Upscale and regenerate this photo at 4K ultra-high-resolution. Sharpen details, remove noise and blur, enhance lighting and colors, preserve the original subject, composition and identity exactly. ${basePrompt}`.trim()
+        : basePrompt;
 
       // Persist user message
       const { data: insertedUser } = await supabase
         .from("ai_tutor_messages")
-        .insert({ user_id: user.id, role: "user", content: promptText || "(image request)", image_url: imgUrl })
+        .insert({ user_id: user.id, role: "user", content: text || basePrompt || "(image request)", image_url: imageFile ? imgUrl : null })
         .select("id,role,content,image_url").single();
       const userMsg: TutorMsg = insertedUser
         ? (insertedUser as TutorMsg)
