@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { getQuestionsForSubject } from "@/lib/questionBank";
 import { SUBJECTS } from "@/lib/mockData";
@@ -15,7 +15,10 @@ const ExamTaking = () => {
   const navigate = useNavigate();
   const grade = Number(searchParams.get("grade")) || 7;
 
-  const questions = getQuestionsForSubject(subjectId || "");
+  // IMPORTANT: call ONCE per mount. getQuestionsForSubject advances a cursor in
+  // localStorage on every call — without useMemo the timer would swap questions
+  // every second as the component re-renders.
+  const questions = useMemo(() => getQuestionsForSubject(subjectId || ""), [subjectId]);
   const subject = SUBJECTS.find((s) => s.id === subjectId);
   const timeLimit = questions.length * 120; // 2 min per question
 
@@ -25,7 +28,7 @@ const ExamTaking = () => {
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null));
+  const [answers, setAnswers] = useState<(number | null)[]>(() => new Array(questions.length).fill(null));
   const [timeLeft, setTimeLeft] = useState(timeLimit);
 
   useEffect(() => {
