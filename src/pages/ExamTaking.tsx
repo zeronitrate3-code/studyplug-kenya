@@ -6,6 +6,8 @@ import { ArrowLeft, Clock, CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { queueExamResult } from "@/lib/offlineQueue";
+
 
 type Phase = "intro" | "active" | "results";
 
@@ -52,7 +54,7 @@ const ExamTaking = () => {
     if (phase !== "results" || savedRef.current || !user || questions.length === 0) return;
     savedRef.current = true;
     (async () => {
-      const { error } = await supabase.from("exam_results").insert({
+      const payload = {
         user_id: user.id,
         subject_id: subjectId || "",
         subject_name: subject?.name || subjectId || "Exam",
@@ -61,14 +63,25 @@ const ExamTaking = () => {
         total_questions: questions.length,
         percentage,
         points,
-      });
+        created_at: new Date().toISOString(),
+      };
+
+      if (!navigator.onLine) {
+        queueExamResult(payload);
+        toast({ title: "Saved offline", description: "This result will upload once you're back online." });
+        return;
+      }
+
+      const { error } = await supabase.from("exam_results").insert(payload);
       if (error) {
-        toast({ title: "Couldn't save result", description: error.message, variant: "destructive" });
+        queueExamResult(payload);
+        toast({ title: "Saved offline", description: "Couldn't reach the server — we'll upload it later." });
       } else {
         toast({ title: "Result saved!", description: `+${points} points added to your rank.` });
       }
     })();
   }, [phase, user, subjectId, subject, grade, score, questions.length, percentage, points, toast]);
+
 
   if (questions.length === 0) {
     return (

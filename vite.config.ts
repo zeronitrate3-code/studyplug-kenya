@@ -24,9 +24,18 @@ export default defineConfig(({ mode }) => ({
       },
       manifest: false, // We already ship public/manifest.json
       workbox: {
+        navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff2}"],
         runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "html-navigations",
+              networkTimeoutSeconds: 5,
+            },
+          },
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\/.*/,
             handler: "CacheFirst",
@@ -37,6 +46,7 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
+
     }),
   ].filter(Boolean),
   optimizeDeps: {
