@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import BottomNav from "@/components/BottomNav";
 import PresenceTracker from "@/components/PresenceTracker";
+import OfflineBanner from "@/components/OfflineBanner";
+
 import Dashboard from "./pages/Dashboard";
 import Exams from "./pages/Exams";
 import ExamTaking from "./pages/ExamTaking";
@@ -33,6 +35,8 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <PresenceTracker />
+          <OfflineBanner />
+
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
