@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "next-themes";
 import BottomNav from "@/components/BottomNav";
 import PresenceTracker from "@/components/PresenceTracker";
 import OfflineBanner from "@/components/OfflineBanner";
@@ -17,6 +18,8 @@ import CreateRoom from "./pages/CreateRoom";
 import AITutor from "./pages/AITutor";
 import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
+import Messages from "./pages/Messages";
+import DirectMessage from "./pages/DirectMessage";
 import People from "./pages/People";
 import Auth from "./pages/Auth";
 import Trivia from "./pages/Trivia";
@@ -29,6 +32,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -51,6 +55,8 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<PublicProfile />} />
             <Route path="/people" element={<People />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/messages/:userId" element={<DirectMessage />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/install" element={<Install />} />
             <Route path="*" element={<NotFound />} />
@@ -59,6 +65,7 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
