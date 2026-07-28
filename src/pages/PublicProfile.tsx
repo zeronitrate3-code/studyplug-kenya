@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Lock, UserPlus, Check, X, Loader2, Trophy, Calendar, BookOpen } from "lucide-react";
+import { ArrowLeft, Lock, UserPlus, Check, X, Loader2, MessageSquare, Trophy, Calendar, BookOpen } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getRankForPoints } from "@/lib/ranks";
@@ -191,6 +191,13 @@ const PublicProfile = () => {
             </div>
           </div>
         </div>
+
+        {/* Message */}
+        {friendStatus !== "self" && (
+          <Button variant="secondary" className="w-full" onClick={() => navigate(`/messages/${target.user_id}`)}>
+            <MessageSquare className="h-4 w-4 mr-2" /> Send Message
+          </Button>
+        )}
 
         {/* Friend action */}
         {friendStatus === "self" ? null : friendStatus === "none" ? (
