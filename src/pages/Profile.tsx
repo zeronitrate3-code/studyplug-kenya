@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import RankBadge from "@/components/RankBadge";
-import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText, Users, Lock, Unlock } from "lucide-react";
+import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText, Users, Lock, Unlock, MessageSquare, Moon, Sun } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GRADES } from "@/lib/mockData";
+import { useTheme } from "next-themes";
 
 const Profile = () => {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -21,6 +22,7 @@ const Profile = () => {
   const [editGrade, setEditGrade] = useState(String(profile?.grade || 7));
   const [saving, setSaving] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const { theme, resolvedTheme, setTheme } = useTheme();
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -95,6 +97,13 @@ const Profile = () => {
         setEditGrade(String(profile.grade || 7));
         setEditOpen(true);
       }
+    },
+    { icon: MessageSquare, label: "Messages", desc: "Private chats with friends", action: () => navigate("/messages") },
+    {
+      icon: resolvedTheme === "dark" ? Sun : Moon,
+      label: resolvedTheme === "dark" ? "Appearance: Dark 🌙" : "Appearance: Light ☀️",
+      desc: theme === "system" ? "Following your device — tap to switch" : "Tap to switch theme",
+      action: () => setTheme(resolvedTheme === "dark" ? "light" : "dark"),
     },
     { icon: Users, label: "Find People", desc: "Browse users & add friends", action: () => navigate("/people") },
     {

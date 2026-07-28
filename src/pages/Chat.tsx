@@ -5,6 +5,7 @@ import { Send, ArrowLeft, Flag, Users, Image, Smile, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import EmojiPicker, { Theme } from "emoji-picker-react";
 import { toast } from "@/hooks/use-toast";
+import { usePresenceState } from "@/hooks/usePresence";
 
 interface ChatRoom {
   id: string;
@@ -33,6 +34,7 @@ interface ChatMessage {
 const Chat = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const onlineIds = usePresenceState();
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -46,6 +48,8 @@ const Chat = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const room = rooms.find((r) => r.id === activeRoom);
+  // Students who have posted in this room and are currently online
+  const onlineActive = new Set(messages.filter((m) => onlineIds.has(m.user_id)).map((m) => m.user_id)).size;
 
   // Redirect if not logged in
   useEffect(() => {
@@ -177,7 +181,7 @@ const Chat = () => {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">{room.name}</p>
             <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-              <Users className="h-3 w-3 shrink-0" /> {room.description}
+              <Users className="h-3 w-3 shrink-0" /> {onlineActive} online · {room.description}
             </p>
           </div>
           <button
@@ -201,13 +205,22 @@ const Chat = () => {
             return (
               <div key={msg.id} className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
                 {!isMe && (
-                  <div className="h-7 w-7 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center text-[10px] font-bold text-foreground">
-                    {msg.avatar_url ? (
-                      <img src={msg.avatar_url} alt={msg.display_name || "user"} className="h-full w-full object-cover" />
-                    ) : (
-                      initial
+                  <button
+                    onClick={() => navigate(`/profile/${msg.user_id}`)}
+                    className="relative h-7 w-7 shrink-0"
+                    aria-label={`View ${msg.display_name || "student"}'s profile`}
+                  >
+                    <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-muted text-[10px] font-bold text-foreground">
+                      {msg.avatar_url ? (
+                        <img src={msg.avatar_url} alt={msg.display_name || "user"} className="h-full w-full object-cover" />
+                      ) : (
+                        initial
+                      )}
+                    </span>
+                    {onlineIds.has(msg.user_id) && (
+                      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success ring-2 ring-background" />
                     )}
-                  </div>
+                  </button>
                 )}
                 <div className={`max-w-[75%] rounded-2xl px-4 py-2 ${
                   isMe
@@ -215,7 +228,10 @@ const Chat = () => {
                     : "bg-muted text-foreground rounded-bl-md"
                 }`}>
                   {!isMe && (
-                    <p className="text-xs font-semibold mb-0.5 opacity-80">{msg.display_name || "Student"}</p>
+                    <p className="text-xs font-semibold mb-0.5 opacity-80">
+                      {msg.display_name || "Student"}
+                      {onlineIds.has(msg.user_id) && <span className="ml-1 text-[10px] font-normal">🟢 online</span>}
+                    </p>
                   )}
                   {msg.image_url && (
                     <img src={msg.image_url} alt="shared" className="rounded-lg max-w-full max-h-48 mb-1 object-cover" />
@@ -307,12 +323,20 @@ const Chat = () => {
     <div className="animate-fade-in space-y-4 pb-24 px-4 pt-6 max-w-lg mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Chat Rooms 💬</h1>
+        <div className="flex gap-2">
+        <button
+          onClick={() => navigate("/messages")}
+          className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm"
+        >
+          Messages
+        </button>
         <button
           onClick={() => navigate("/chat/new")}
           className="rounded-lg gradient-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm"
         >
           + New Room
         </button>
+        </div>
       </div>
       <p className="text-sm text-muted-foreground">Join a room and discuss with fellow students</p>
 

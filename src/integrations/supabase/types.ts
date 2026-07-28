@@ -124,6 +124,36 @@ export type Database = {
         }
         Relationships: []
       }
+      direct_messages: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          read_at: string | null
+          recipient_id: string
+          sender_id: string
+          text: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          read_at?: string | null
+          recipient_id: string
+          sender_id: string
+          text?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string
+          text?: string | null
+        }
+        Relationships: []
+      }
       exam_results: {
         Row: {
           created_at: string

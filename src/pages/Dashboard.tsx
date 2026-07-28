@@ -7,6 +7,7 @@ import logo from "@/assets/logo.png";
 import { ChevronDown, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface ExamRow {
   id: string;
@@ -79,6 +80,8 @@ const Dashboard = () => {
             <p className="text-xs text-muted-foreground">Ready to learn today?</p>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+        <ThemeToggle />
         <div className="relative">
           <select
             value={grade}
@@ -90,6 +93,7 @@ const Dashboard = () => {
             ))}
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        </div>
         </div>
       </div>
 
