@@ -371,8 +371,8 @@ const AITutor = () => {
                     ? "gradient-primary text-primary-foreground rounded-br-md"
                     : "bg-muted text-foreground rounded-bl-md"
                 }`}>
-                  {m.image_url && (
-                    <img src={m.image_url} alt="upload" className="rounded-lg max-w-full max-h-56 mb-1 object-cover" />
+                  {m.image_url && displaySrc(m.image_url) && (
+                    <img src={displaySrc(m.image_url)} alt="upload" className="rounded-lg max-w-full max-h-56 mb-1 object-cover" />
                   )}
                   {isUser ? (
                     <p className="text-sm whitespace-pre-wrap break-words">{m.content}</p>

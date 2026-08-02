@@ -1,5 +1,6 @@
 // AI Tutor edge function — streams responses from Lovable AI Gateway.
-// Public function (verify_jwt = false), but we expect the client to pass auth context indirectly.
+// Requires a valid signed-in user (JWT validated in code).
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

@@ -1,5 +1,6 @@
 // AI Tutor — image generation & photo enhancement via Lovable AI Gateway (Gemini image model).
-// Returns a single PNG (base64) in JSON: { image_b64: "..." }.
+// Requires a valid signed-in user (JWT validated in code). Returns { image_b64 }.
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
