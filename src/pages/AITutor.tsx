@@ -147,18 +147,23 @@ const AITutor = () => {
     setInput("");
 
     // Build payload — send last 20 messages + new one. Use multimodal content if image.
-    const history = [...messages, userMsg].slice(-20).map((m) => {
-      if (m.image_url && m.role === "user") {
-        return {
-          role: m.role,
-          content: [
-            { type: "text", text: m.content },
-            { type: "image_url", image_url: { url: m.image_url } },
-          ],
-        };
-      }
-      return { role: m.role, content: m.content };
-    });
+    const history = await Promise.all(
+      [...messages, userMsg].slice(-20).map(async (m) => {
+        if (m.image_url && m.role === "user") {
+          const signed = await signPath(m.image_url);
+          if (signed) {
+            return {
+              role: m.role,
+              content: [
+                { type: "text", text: m.content },
+                { type: "image_url", image_url: { url: signed } },
+              ],
+            };
+          }
+        }
+        return { role: m.role, content: m.content };
+      })
+    );
 
     // Add placeholder assistant message
     const assistantId = crypto.randomUUID();
@@ -170,7 +175,7 @@ const AITutor = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: await authHeader(),
         },
         body: JSON.stringify({ messages: history }),
       });
