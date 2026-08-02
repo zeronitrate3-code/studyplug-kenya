@@ -272,10 +272,7 @@ export type Database = {
       }
     }
     Functions: {
-      can_view_full_profile: {
-        Args: { _target: string; _viewer: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
