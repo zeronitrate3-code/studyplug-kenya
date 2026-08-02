@@ -26,6 +26,7 @@ const AITutor = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageMode, setImageMode] = useState(false);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +54,37 @@ const AITutor = () => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Resolve private storage paths into short-lived signed URLs for display.
+  useEffect(() => {
+    const pending = messages
+      .map((m) => m.image_url)
+      .filter((v): v is string => !!v && !/^(https?:|data:|blob:)/.test(v) && !signedUrls[v]);
+    if (pending.length === 0) return;
+    (async () => {
+      const entries: [string, string][] = [];
+      for (const p of Array.from(new Set(pending))) {
+        const { data } = await supabase.storage.from("tutor-uploads").createSignedUrl(p, 3600);
+        if (data?.signedUrl) entries.push([p, data.signedUrl]);
+      }
+      if (entries.length) setSignedUrls((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
+    })();
+  }, [messages, signedUrls]);
+
+  const displaySrc = (v: string | null) =>
+    !v ? undefined : /^(https?:|data:|blob:)/.test(v) ? v : signedUrls[v];
+
+  const signPath = async (v: string | null): Promise<string | null> => {
+    if (!v) return null;
+    if (/^(https?:|data:|blob:)/.test(v)) return v;
+    const { data } = await supabase.storage.from("tutor-uploads").createSignedUrl(v, 3600);
+    return data?.signedUrl ?? null;
+  };
+
+  const authHeader = async () => {
+    const { data } = await supabase.auth.getSession();
+    return `Bearer ${data.session?.access_token ?? ""}`;
+  };
+
   const onPickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -64,6 +96,7 @@ const AITutor = () => {
     setImagePreview(URL.createObjectURL(f));
   };
 
+  // Returns the storage PATH (bucket is private; display uses signed URLs).
   const uploadImage = async (file: File): Promise<string | null> => {
     const ext = file.name.split(".").pop() || "jpg";
     const path = `${user!.id}/${Date.now()}.${ext}`;
@@ -72,7 +105,7 @@ const AITutor = () => {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
       return null;
     }
-    return supabase.storage.from("tutor-uploads").getPublicUrl(path).data.publicUrl;
+    return path;
   };
 
   const isUpscaleRequest = (t: string) =>
@@ -114,18 +147,23 @@ const AITutor = () => {
     setInput("");
 
     // Build payload — send last 20 messages + new one. Use multimodal content if image.
-    const history = [...messages, userMsg].slice(-20).map((m) => {
-      if (m.image_url && m.role === "user") {
-        return {
-          role: m.role,
-          content: [
-            { type: "text", text: m.content },
-            { type: "image_url", image_url: { url: m.image_url } },
-          ],
-        };
-      }
-      return { role: m.role, content: m.content };
-    });
+    const history = await Promise.all(
+      [...messages, userMsg].slice(-20).map(async (m) => {
+        if (m.image_url && m.role === "user") {
+          const signed = await signPath(m.image_url);
+          if (signed) {
+            return {
+              role: m.role,
+              content: [
+                { type: "text", text: m.content },
+                { type: "image_url", image_url: { url: signed } },
+              ],
+            };
+          }
+        }
+        return { role: m.role, content: m.content };
+      })
+    );
 
     // Add placeholder assistant message
     const assistantId = crypto.randomUUID();
@@ -137,7 +175,7 @@ const AITutor = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: await authHeader(),
         },
         body: JSON.stringify({ messages: history }),
       });
@@ -238,9 +276,9 @@ const AITutor = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: await authHeader(),
         },
-        body: JSON.stringify({ prompt: promptText, image_url: imgUrl }),
+        body: JSON.stringify({ prompt: promptText, image_url: await signPath(imgUrl) }),
       });
 
       if (!resp.ok) {
@@ -252,16 +290,11 @@ const AITutor = () => {
       }
 
       const { image_b64 } = await resp.json();
-      // Upload generated image to storage so it persists
+      // Upload generated image to private storage so it persists
       const bytes = Uint8Array.from(atob(image_b64), (c) => c.charCodeAt(0));
       const path = `${user.id}/gen-${Date.now()}.png`;
       const { error: upErr } = await supabase.storage.from("tutor-uploads").upload(path, bytes, { contentType: "image/png" });
-      let publicUrl: string;
-      if (upErr) {
-        publicUrl = `data:image/png;base64,${image_b64}`;
-      } else {
-        publicUrl = supabase.storage.from("tutor-uploads").getPublicUrl(path).data.publicUrl;
-      }
+      const publicUrl: string = upErr ? `data:image/png;base64,${image_b64}` : path;
 
       const caption = imgUrl ? "Here's your enhanced photo:" : "Here's the image you asked for:";
       await supabase.from("ai_tutor_messages").insert({
@@ -338,8 +371,8 @@ const AITutor = () => {
                     ? "gradient-primary text-primary-foreground rounded-br-md"
                     : "bg-muted text-foreground rounded-bl-md"
                 }`}>
-                  {m.image_url && (
-                    <img src={m.image_url} alt="upload" className="rounded-lg max-w-full max-h-56 mb-1 object-cover" />
+                  {m.image_url && displaySrc(m.image_url) && (
+                    <img src={displaySrc(m.image_url)} alt="upload" className="rounded-lg max-w-full max-h-56 mb-1 object-cover" />
                   )}
                   {isUser ? (
                     <p className="text-sm whitespace-pre-wrap break-words">{m.content}</p>
