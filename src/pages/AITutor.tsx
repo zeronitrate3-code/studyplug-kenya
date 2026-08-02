@@ -26,6 +26,7 @@ const AITutor = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageMode, setImageMode] = useState(false);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +54,37 @@ const AITutor = () => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Resolve private storage paths into short-lived signed URLs for display.
+  useEffect(() => {
+    const pending = messages
+      .map((m) => m.image_url)
+      .filter((v): v is string => !!v && !/^(https?:|data:|blob:)/.test(v) && !signedUrls[v]);
+    if (pending.length === 0) return;
+    (async () => {
+      const entries: [string, string][] = [];
+      for (const p of Array.from(new Set(pending))) {
+        const { data } = await supabase.storage.from("tutor-uploads").createSignedUrl(p, 3600);
+        if (data?.signedUrl) entries.push([p, data.signedUrl]);
+      }
+      if (entries.length) setSignedUrls((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
+    })();
+  }, [messages, signedUrls]);
+
+  const displaySrc = (v: string | null) =>
+    !v ? undefined : /^(https?:|data:|blob:)/.test(v) ? v : signedUrls[v];
+
+  const signPath = async (v: string | null): Promise<string | null> => {
+    if (!v) return null;
+    if (/^(https?:|data:|blob:)/.test(v)) return v;
+    const { data } = await supabase.storage.from("tutor-uploads").createSignedUrl(v, 3600);
+    return data?.signedUrl ?? null;
+  };
+
+  const authHeader = async () => {
+    const { data } = await supabase.auth.getSession();
+    return `Bearer ${data.session?.access_token ?? ""}`;
+  };
+
   const onPickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -64,6 +96,7 @@ const AITutor = () => {
     setImagePreview(URL.createObjectURL(f));
   };
 
+  // Returns the storage PATH (bucket is private; display uses signed URLs).
   const uploadImage = async (file: File): Promise<string | null> => {
     const ext = file.name.split(".").pop() || "jpg";
     const path = `${user!.id}/${Date.now()}.${ext}`;
@@ -72,7 +105,7 @@ const AITutor = () => {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
       return null;
     }
-    return supabase.storage.from("tutor-uploads").getPublicUrl(path).data.publicUrl;
+    return path;
   };
 
   const isUpscaleRequest = (t: string) =>
