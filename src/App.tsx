@@ -26,7 +26,12 @@ import Trivia from "./pages/Trivia";
 import Support from "./pages/Support";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Install from "./pages/Install";
+import ExamHistory from "./pages/ExamHistory";
+import Statistics from "./pages/Statistics";
+import Admin from "./pages/Admin";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+
 
 const queryClient = new QueryClient();
 
