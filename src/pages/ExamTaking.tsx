@@ -1,15 +1,13 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { getQuestionsForSubject } from "@/lib/questionBank";
 import { SUBJECTS } from "@/lib/mockData";
-import { ArrowLeft, Clock, CheckCircle, XCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { queueExamResult } from "@/lib/offlineQueue";
+import { loadExamQuestions, submitExam, type ExamQuestion } from "@/lib/examService";
 
-
-type Phase = "intro" | "active" | "results";
+type Phase = "loading" | "intro" | "active" | "results";
 
 const ExamTaking = () => {
   const { subjectId } = useParams();
@@ -17,34 +15,61 @@ const ExamTaking = () => {
   const navigate = useNavigate();
   const grade = Number(searchParams.get("grade")) || 7;
 
-  // IMPORTANT: call ONCE per mount. getQuestionsForSubject advances a cursor in
-  // localStorage on every call — without useMemo the timer would swap questions
-  // every second as the component re-renders.
-  const questions = useMemo(() => getQuestionsForSubject(subjectId || ""), [subjectId]);
   const subject = SUBJECTS.find((s) => s.id === subjectId);
-  const timeLimit = questions.length * 120; // 2 min per question
-
   const { user } = useAuth();
   const { toast } = useToast();
   const savedRef = useRef(false);
 
-  const [phase, setPhase] = useState<Phase>("intro");
+  const [questions, setQuestions] = useState<ExamQuestion[]>([]);
+  const [phase, setPhase] = useState<Phase>("loading");
   const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState<(number | null)[]>(() => new Array(questions.length).fill(null));
-  const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const [answers, setAnswers] = useState<(number | null)[]>([]);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [timeLimit, setTimeLimit] = useState(0);
+
+  // Load questions ONCE per mount (never during timer ticks).
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const qs = await loadExamQuestions(subjectId || "", user?.id ?? null);
+      if (!active) return;
+      setQuestions(qs);
+      setAnswers(new Array(qs.length).fill(null));
+      const limit = qs.length * 120; // 2 min per question
+      setTimeLimit(limit);
+      setTimeLeft(limit);
+      setPhase("intro");
+    })();
+    return () => {
+      active = false;
+    };
+  }, [subjectId, user?.id]);
 
   useEffect(() => {
     if (phase !== "active") return;
-    if (timeLeft <= 0) { setPhase("results"); return; }
+    if (timeLeft <= 0) {
+      setPhase("results");
+      return;
+    }
     const t = setInterval(() => setTimeLeft((p) => p - 1), 1000);
     return () => clearInterval(t);
   }, [phase, timeLeft]);
 
-  const selectAnswer = useCallback((idx: number) => {
-    setAnswers((prev) => { const n = [...prev]; n[currentQ] = idx; return n; });
-  }, [currentQ]);
+  const selectAnswer = useCallback(
+    (idx: number) => {
+      setAnswers((prev) => {
+        const n = [...prev];
+        n[currentQ] = idx;
+        return n;
+      });
+    },
+    [currentQ]
+  );
 
-  const score = answers.reduce<number>((acc, ans, i) => acc + (ans === questions[i]?.correctAnswer ? 1 : 0), 0);
+  const score = answers.reduce<number>(
+    (acc, ans, i) => acc + (ans === questions[i]?.correctAnswer ? 1 : 0),
+    0
+  );
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
   const points = score * 10;
   const mins = Math.floor(timeLeft / 60);
@@ -54,7 +79,7 @@ const ExamTaking = () => {
     if (phase !== "results" || savedRef.current || !user || questions.length === 0) return;
     savedRef.current = true;
     (async () => {
-      const payload = {
+      const offlinePayload = {
         user_id: user.id,
         subject_id: subjectId || "",
         subject_name: subject?.name || subjectId || "Exam",
@@ -67,21 +92,41 @@ const ExamTaking = () => {
       };
 
       if (!navigator.onLine) {
-        queueExamResult(payload);
+        queueExamResult(offlinePayload);
         toast({ title: "Saved offline", description: "This result will upload once you're back online." });
         return;
       }
 
-      const { error } = await supabase.from("exam_results").insert(payload);
+      const { error } = await submitExam({
+        userId: user.id,
+        subjectId: subjectId || "",
+        subjectName: subject?.name || subjectId || "Exam",
+        grade,
+        questions,
+        answers,
+        score,
+        percentage,
+        points,
+        timeTakenSeconds: Math.max(0, timeLimit - timeLeft),
+      });
+
       if (error) {
-        queueExamResult(payload);
+        queueExamResult(offlinePayload);
         toast({ title: "Saved offline", description: "Couldn't reach the server — we'll upload it later." });
       } else {
         toast({ title: "Result saved!", description: `+${points} points added to your rank.` });
       }
     })();
-  }, [phase, user, subjectId, subject, grade, score, questions.length, percentage, points, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, user, subjectId, grade, questions.length, percentage, points]);
 
+  if (phase === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (questions.length === 0) {
     return (
@@ -134,7 +179,7 @@ const ExamTaking = () => {
                   <p className="text-sm font-medium text-foreground">{q.question}</p>
                 </div>
                 <p className="text-xs text-muted-foreground ml-7">
-                  {!isCorrect && <>Your answer: <span className="text-destructive font-medium">{q.options[answers[i] ?? 0]}</span> • </>}
+                  {!isCorrect && <>Your answer: <span className="text-destructive font-medium">{answers[i] === null ? "—" : q.options[answers[i] as number]}</span> • </>}
                   Correct: <span className="text-success font-medium">{q.options[q.correctAnswer]}</span>
                 </p>
                 <p className="text-xs text-muted-foreground ml-7 mt-1 italic">{q.explanation}</p>
@@ -212,7 +257,7 @@ const ExamTaking = () => {
         ) : (
           <button
             onClick={() => setPhase("results")}
-            className="flex-1 rounded-xl gradient-warm py-3 text-sm font-semibold text-secondary-foreground shadow-md"
+            className="flex-1 rounded-xl gradient-warm py-3 text-sm font-semibold text-primary-foreground shadow-md"
           >
             Submit Exam
           </button>

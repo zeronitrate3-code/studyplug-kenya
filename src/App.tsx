@@ -26,7 +26,12 @@ import Trivia from "./pages/Trivia";
 import Support from "./pages/Support";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Install from "./pages/Install";
+import ExamHistory from "./pages/ExamHistory";
+import Statistics from "./pages/Statistics";
+import Admin from "./pages/Admin";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+
 
 const queryClient = new QueryClient();
 
@@ -44,6 +49,11 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/history" element={<ExamHistory />} />
+            <Route path="/stats" element={<Statistics />} />
+            <Route path="/admin" element={<Admin />} />
+
             <Route path="/exams" element={<Exams />} />
             <Route path="/exam/:subjectId" element={<ExamTaking />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
