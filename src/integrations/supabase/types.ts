@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          created_at: string
+          criteria_type: string
+          criteria_value: number
+          description: string
+          icon: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          criteria_type: string
+          criteria_value?: number
+          description: string
+          icon?: string
+          id: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          criteria_type?: string
+          criteria_value?: number
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       ai_tutor_messages: {
         Row: {
           content: string
@@ -154,6 +184,95 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_attempts: {
+        Row: {
+          answers: Json
+          created_at: string
+          exam_id: string | null
+          grade_id: number | null
+          id: string
+          question_ids: Json
+          started_at: string
+          status: string
+          subject_id: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          exam_id?: string | null
+          grade_id?: number | null
+          id?: string
+          question_ids?: Json
+          started_at?: string
+          status?: string
+          subject_id: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          exam_id?: string | null
+          grade_id?: number | null
+          id?: string
+          question_ids?: Json
+          started_at?: string
+          status?: string
+          subject_id?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_attempts_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_questions: {
+        Row: {
+          exam_id: string
+          id: string
+          position: number
+          question_id: string
+        }
+        Insert: {
+          exam_id: string
+          id?: string
+          position?: number
+          question_id: string
+        }
+        Update: {
+          exam_id?: string
+          id?: string
+          position?: number
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_results: {
         Row: {
           created_at: string
@@ -193,6 +312,63 @@ export type Database = {
         }
         Relationships: []
       }
+      exams: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          grade_id: number | null
+          id: string
+          is_published: boolean
+          question_count: number
+          subject_id: string
+          time_limit_seconds: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          grade_id?: number | null
+          id?: string
+          is_published?: boolean
+          question_count?: number
+          subject_id: string
+          time_limit_seconds?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          grade_id?: number | null
+          id?: string
+          is_published?: boolean
+          question_count?: number
+          subject_id?: string
+          time_limit_seconds?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -220,6 +396,54 @@ export type Database = {
         }
         Relationships: []
       }
+      grade_subjects: {
+        Row: {
+          grade_id: number
+          subject_id: string
+        }
+        Insert: {
+          grade_id: number
+          subject_id: string
+        }
+        Update: {
+          grade_id?: number
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_subjects_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grades: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
       leaderboard_stats: {
         Row: {
           exams_taken: number
@@ -240,6 +464,39 @@ export type Database = {
           sum_percentage?: number
           total_points?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title?: string
+          type?: string
           user_id?: string
         }
         Relationships: []
@@ -280,6 +537,282 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          correct_answer: number
+          created_at: string
+          created_by: string | null
+          difficulty: string
+          explanation: string | null
+          grade_id: number | null
+          id: string
+          legacy_key: string | null
+          options: Json
+          question: string
+          subject_id: string
+          topic_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          correct_answer: number
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string
+          explanation?: string | null
+          grade_id?: number | null
+          id?: string
+          legacy_key?: string | null
+          options: Json
+          question: string
+          subject_id: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          correct_answer?: number
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string
+          explanation?: string | null
+          grade_id?: number | null
+          id?: string
+          legacy_key?: string | null
+          options?: Json
+          question?: string
+          subject_id?: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      results: {
+        Row: {
+          attempt_id: string | null
+          created_at: string
+          exam_id: string | null
+          grade_id: number | null
+          id: string
+          percentage: number
+          points: number
+          score: number
+          subject_id: string
+          subject_name: string
+          time_taken_seconds: number | null
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          attempt_id?: string | null
+          created_at?: string
+          exam_id?: string | null
+          grade_id?: number | null
+          id?: string
+          percentage: number
+          points?: number
+          score: number
+          subject_id: string
+          subject_name: string
+          time_taken_seconds?: number | null
+          total_questions: number
+          user_id: string
+        }
+        Update: {
+          attempt_id?: string | null
+          created_at?: string
+          exam_id?: string | null
+          grade_id?: number | null
+          id?: string
+          percentage?: number
+          points?: number
+          score?: number
+          subject_id?: string
+          subject_name?: string
+          time_taken_seconds?: number | null
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "results_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "exam_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "results_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subject_leaderboard_stats: {
+        Row: {
+          exams_taken: number
+          subject_id: string
+          sum_percentage: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          exams_taken?: number
+          subject_id: string
+          sum_percentage?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          exams_taken?: number
+          subject_id?: string
+          sum_percentage?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subjects: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      topics: {
+        Row: {
+          created_at: string
+          description: string | null
+          grade_id: number | null
+          id: string
+          name: string
+          subject_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          grade_id?: number | null
+          id?: string
+          name: string
+          subject_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          grade_id?: number | null
+          id?: string
+          name?: string
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topics_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topics_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       leaderboard: {
@@ -296,10 +829,13 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      my_roles: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "teacher" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -426,6 +962,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "teacher", "student"],
+    },
   },
 } as const

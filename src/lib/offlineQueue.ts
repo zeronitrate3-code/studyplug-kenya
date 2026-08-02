@@ -43,7 +43,19 @@ export const syncQueuedResults = async (userId: string): Promise<number> => {
   const others = queue.filter((q) => q.user_id !== userId);
   if (mine.length === 0) return 0;
 
-  const { error } = await supabase.from("exam_results").insert(mine);
+  const { error } = await supabase.from("results").insert(
+    mine.map((q) => ({
+      user_id: q.user_id,
+      subject_id: q.subject_id,
+      subject_name: q.subject_name,
+      grade_id: q.grade,
+      score: q.score,
+      total_questions: q.total_questions,
+      percentage: q.percentage,
+      points: q.points,
+      created_at: q.created_at,
+    }))
+  );
   if (error) return 0;
 
   setQueue(others);
