@@ -276,9 +276,9 @@ const AITutor = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: await authHeader(),
         },
-        body: JSON.stringify({ prompt: promptText, image_url: imgUrl }),
+        body: JSON.stringify({ prompt: promptText, image_url: await signPath(imgUrl) }),
       });
 
       if (!resp.ok) {
@@ -290,16 +290,11 @@ const AITutor = () => {
       }
 
       const { image_b64 } = await resp.json();
-      // Upload generated image to storage so it persists
+      // Upload generated image to private storage so it persists
       const bytes = Uint8Array.from(atob(image_b64), (c) => c.charCodeAt(0));
       const path = `${user.id}/gen-${Date.now()}.png`;
       const { error: upErr } = await supabase.storage.from("tutor-uploads").upload(path, bytes, { contentType: "image/png" });
-      let publicUrl: string;
-      if (upErr) {
-        publicUrl = `data:image/png;base64,${image_b64}`;
-      } else {
-        publicUrl = supabase.storage.from("tutor-uploads").getPublicUrl(path).data.publicUrl;
-      }
+      const publicUrl: string = upErr ? `data:image/png;base64,${image_b64}` : path;
 
       const caption = imgUrl ? "Here's your enhanced photo:" : "Here's the image you asked for:";
       await supabase.from("ai_tutor_messages").insert({
