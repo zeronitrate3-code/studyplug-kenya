@@ -220,6 +220,30 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard_stats: {
+        Row: {
+          exams_taken: number
+          sum_percentage: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          exams_taken?: number
+          sum_percentage?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          exams_taken?: number
+          sum_percentage?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -272,10 +296,7 @@ export type Database = {
       }
     }
     Functions: {
-      can_view_full_profile: {
-        Args: { _target: string; _viewer: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
