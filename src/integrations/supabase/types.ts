@@ -468,6 +468,45 @@ export type Database = {
         }
         Relationships: []
       }
+      note_progress: {
+        Row: {
+          bookmarked: boolean
+          completed: boolean
+          created_at: string
+          grade: number | null
+          id: string
+          last_read_at: string | null
+          subject_id: string | null
+          topic_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bookmarked?: boolean
+          completed?: boolean
+          created_at?: string
+          grade?: number | null
+          id?: string
+          last_read_at?: string | null
+          subject_id?: string | null
+          topic_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bookmarked?: boolean
+          completed?: boolean
+          created_at?: string
+          grade?: number | null
+          id?: string
+          last_read_at?: string | null
+          subject_id?: string | null
+          topic_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -510,6 +549,8 @@ export type Database = {
           id: string
           is_private: boolean
           last_seen_at: string | null
+          pathway: string | null
+          selected_subjects: string[]
           updated_at: string
           user_id: string
         }
@@ -521,6 +562,8 @@ export type Database = {
           id?: string
           is_private?: boolean
           last_seen_at?: string | null
+          pathway?: string | null
+          selected_subjects?: string[]
           updated_at?: string
           user_id: string
         }
@@ -532,6 +575,8 @@ export type Database = {
           id?: string
           is_private?: boolean
           last_seen_at?: string | null
+          pathway?: string | null
+          selected_subjects?: string[]
           updated_at?: string
           user_id?: string
         }

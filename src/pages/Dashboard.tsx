@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSubjectGroupsForGrade } from "@/lib/mockData";
+import { defaultSubjectsForGrade, subjectById } from "@/lib/curriculum";
 import SubjectCard from "@/components/SubjectCard";
 import StatCard from "@/components/StatCard";
 import logo from "@/assets/logo.png";
@@ -66,7 +66,10 @@ const Dashboard = () => {
     user?.email?.split("@")[0] ||
     "Student";
 
-  const subjectGroups = getSubjectGroupsForGrade(grade);
+  const mySubjects = (profile?.selected_subjects?.length
+    ? profile.selected_subjects
+    : defaultSubjectsForGrade(grade)
+  ).map(subjectById);
   const recent = results.slice(0, 5);
 
   return (
@@ -117,17 +120,29 @@ const Dashboard = () => {
         </div>
       </button>
 
-      {/* Subjects by pathway */}
-      {subjectGroups.map((group) => (
-        <div key={group.title}>
-          <h2 className="text-lg font-semibold text-foreground mb-3">{group.title}</h2>
-          <div className="grid grid-cols-3 gap-3">
-            {group.subjects.map((subject) => (
-              <SubjectCard key={subject.id} id={subject.id} name={subject.name} icon={subject.icon} grade={grade} />
-            ))}
-          </div>
+      {/* My subjects */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">My Subjects</h2>
+          <button onClick={() => navigate("/onboarding?edit=1")} className="text-xs font-medium text-primary underline">
+            Edit
+          </button>
         </div>
-      ))}
+        {profile && !profile.selected_subjects?.length && (
+          <button
+            onClick={() => navigate("/onboarding")}
+            className="mb-3 w-full rounded-xl border border-dashed border-primary/50 bg-primary/5 p-4 text-left"
+          >
+            <p className="text-sm font-medium text-foreground">Choose your subjects</p>
+            <p className="text-xs text-muted-foreground">Pick your grade, pathway and subjects to personalise StudyPlug.</p>
+          </button>
+        )}
+        <div className="grid grid-cols-3 gap-3">
+          {mySubjects.map((subject) => (
+            <SubjectCard key={subject.id} id={subject.id} name={subject.name} icon={subject.icon} grade={grade} />
+          ))}
+        </div>
+      </div>
 
       {/* Recent Activity */}
       <div>

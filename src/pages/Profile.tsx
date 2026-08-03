@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import RankBadge from "@/components/RankBadge";
-import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText, Users, Lock, Unlock, MessageSquare, Moon, Sun } from "lucide-react";
+import { Settings, Bell, Shield, LogOut, HelpCircle, ChevronRight, Camera, FileText, Users, Lock, Unlock, MessageSquare, Moon, Sun, BookOpen } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,6 +97,10 @@ const Profile = () => {
         setEditGrade(String(profile.grade || 7));
         setEditOpen(true);
       }
+    },
+    {
+      icon: BookOpen, label: "My Subjects", desc: "Grade, pathway & subject choices",
+      action: () => navigate("/onboarding?edit=1"),
     },
     { icon: MessageSquare, label: "Messages", desc: "Private chats with friends", action: () => navigate("/messages") },
     {
