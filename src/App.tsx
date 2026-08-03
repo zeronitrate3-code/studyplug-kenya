@@ -8,8 +8,13 @@ import { ThemeProvider } from "next-themes";
 import BottomNav from "@/components/BottomNav";
 import PresenceTracker from "@/components/PresenceTracker";
 import OfflineBanner from "@/components/OfflineBanner";
+import FloatingTutor from "@/components/FloatingTutor";
+import { StudyProvider } from "@/contexts/StudyContext";
 
 import Dashboard from "./pages/Dashboard";
+import Onboarding from "./pages/Onboarding";
+import Notes from "./pages/Notes";
+import NoteTopicPage from "./pages/NoteTopic";
 import Exams from "./pages/Exams";
 import ExamTaking from "./pages/ExamTaking";
 import Leaderboard from "./pages/Leaderboard";
@@ -43,12 +48,16 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <StudyProvider>
           <PresenceTracker />
           <OfflineBanner />
 
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/notes" element={<Notes />} />
+            <Route path="/notes/:topicKey" element={<NoteTopicPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/history" element={<ExamHistory />} />
             <Route path="/stats" element={<Statistics />} />
@@ -72,6 +81,8 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />
+          <FloatingTutor />
+          </StudyProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

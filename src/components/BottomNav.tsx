@@ -1,4 +1,4 @@
-import { Home, FileText, Trophy, MessageCircle, User, Brain } from "lucide-react";
+import { Home, FileText, Trophy, MessageCircle, User, BookOpen } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,7 @@ const navItems = [
   { to: "/", icon: Home, label: "Home" },
   { to: "/exams", icon: FileText, label: "Exams" },
   { to: "/chat", icon: MessageCircle, label: "Chat" },
-  { to: "/trivia", icon: Brain, label: "Trivia" },
+  { to: "/notes", icon: BookOpen, label: "Notes" },
   { to: "/leaderboard", icon: Trophy, label: "Ranks" },
   { to: "/profile", icon: User, label: "Profile" },
 ];
