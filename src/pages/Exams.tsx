@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { SUBJECTS, getSubjectGroupsForGrade } from "@/lib/mockData";
+import { defaultSubjectsForGrade, subjectById } from "@/lib/curriculum";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, Play, History, BarChart2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,7 @@ const Exams = () => {
     return stored ? Number(stored) : 7;
   });
   const [pastExams, setPastExams] = useState<PastExam[]>([]);
+  const [showAll, setShowAll] = useState(false);
 
   // Once profile loads, prefer its grade if user hasn't picked locally yet
   useEffect(() => {
@@ -77,6 +79,10 @@ const Exams = () => {
   }, [user]);
 
   const subjectGroups = getSubjectGroupsForGrade(grade);
+  const mySubjects = (profile?.selected_subjects?.length
+    ? profile.selected_subjects
+    : defaultSubjectsForGrade(grade)
+  ).map(subjectById);
 
   return (
     <div className="animate-fade-in space-y-6 pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -96,16 +102,39 @@ const Exams = () => {
         </div>
       </div>
 
-      {subjectGroups.map((group) => (
-        <div key={group.title}>
-          <h2 className="text-base font-semibold text-foreground mb-2">{group.title}</h2>
+      {!showAll ? (
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground">My Subjects</h2>
+            <button onClick={() => setShowAll(true)} className="text-xs font-medium text-primary underline">
+              Show all subjects
+            </button>
+          </div>
           <div className="space-y-2">
-            {group.subjects.map((subject) => (
+            {mySubjects.map((subject) => (
               <SubjectRow key={subject.id} subject={subject} grade={grade} navigate={navigate} />
             ))}
           </div>
         </div>
-      ))}
+      ) : (
+        <>
+          <div className="flex justify-end">
+            <button onClick={() => setShowAll(false)} className="text-xs font-medium text-primary underline">
+              Show only my subjects
+            </button>
+          </div>
+          {subjectGroups.map((group) => (
+            <div key={group.title}>
+              <h2 className="text-base font-semibold text-foreground mb-2">{group.title}</h2>
+              <div className="space-y-2">
+                {group.subjects.map((subject) => (
+                  <SubjectRow key={subject.id} subject={subject} grade={grade} navigate={navigate} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </>
+      )}
 
       {/* Exam History */}
       <div>
