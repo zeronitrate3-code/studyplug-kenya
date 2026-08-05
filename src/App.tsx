@@ -34,6 +34,8 @@ import Install from "./pages/Install";
 import ExamHistory from "./pages/ExamHistory";
 import Statistics from "./pages/Statistics";
 import Admin from "./pages/Admin";
+import Notifications from "./pages/Notifications";
+
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -62,6 +64,8 @@ const App = () => (
             <Route path="/history" element={<ExamHistory />} />
             <Route path="/stats" element={<Statistics />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/notifications" element={<Notifications />} />
+
 
             <Route path="/exams" element={<Exams />} />
             <Route path="/exam/:subjectId" element={<ExamTaking />} />

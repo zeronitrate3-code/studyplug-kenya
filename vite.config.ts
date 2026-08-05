@@ -24,7 +24,9 @@ export default defineConfig(({ mode }) => ({
       },
       manifest: false, // We already ship public/manifest.json
       workbox: {
+        importScripts: ["/push-sw.js"],
         navigateFallback: "index.html",
+
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff2}"],
         runtimeCaching: [
