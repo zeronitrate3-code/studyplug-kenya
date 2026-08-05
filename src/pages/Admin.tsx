@@ -151,7 +151,7 @@ const Admin = () => {
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="text-muted-foreground"><ArrowLeft className="h-5 w-5" /></button>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Shield className="h-5 w-5 text-primary" /> Admin
+          <Shield className="h-5 w-5 text-primary" /> {isAdmin ? "Owner console" : "Admin"}
         </h1>
       </div>
 
@@ -167,6 +167,14 @@ const Admin = () => {
           </div>
         ))}
       </div>
+
+      {isAdmin && (
+        <>
+          <AdminBroadcast />
+          <AdminLearners />
+        </>
+      )}
+
 
       <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
         <h2 className="text-sm font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4" /> Add a question</h2>
