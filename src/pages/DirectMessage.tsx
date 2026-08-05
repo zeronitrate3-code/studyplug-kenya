@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePresenceState, formatLastSeen } from "@/hooks/usePresence";
 import { ArrowLeft, Loader2, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { sendNotification } from "@/lib/push";
+
 
 interface DM {
   id: string;
