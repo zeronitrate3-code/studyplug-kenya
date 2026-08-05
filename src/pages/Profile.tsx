@@ -12,9 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GRADES } from "@/lib/mockData";
 import { useTheme } from "next-themes";
+import { useRoles } from "@/hooks/useRoles";
 
 const Profile = () => {
   const { user, profile, signOut, refreshProfile } = useAuth();
+  const { isAdmin } = useRoles();
+
   const navigate = useNavigate();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
