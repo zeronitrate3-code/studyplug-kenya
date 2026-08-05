@@ -8,6 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import AdminLearners from "@/components/admin/AdminLearners";
+import AdminBroadcast from "@/components/admin/AdminBroadcast";
+
 
 interface SubjectRow {
   id: string;
@@ -36,7 +39,7 @@ const emptyForm = {
 const Admin = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { isStaff, loading: roleLoading } = useRoles();
+  const { isStaff, isAdmin, loading: roleLoading } = useRoles();
   const { toast } = useToast();
 
   const [subjects, setSubjects] = useState<SubjectRow[]>([]);
