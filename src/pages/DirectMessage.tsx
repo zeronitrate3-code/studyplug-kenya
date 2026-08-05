@@ -106,8 +106,16 @@ const DirectMessage = () => {
       .single();
     if (!error && data) {
       setMessages((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data as DM]));
+      void sendNotification({
+        recipientId: userId,
+        title: `New message from ${profileName()}`,
+        body: body.slice(0, 120),
+        link: `/messages/${user.id}`,
+        type: "direct_message",
+      });
     }
     setSending(false);
+
   };
 
   if (!user) return null;
