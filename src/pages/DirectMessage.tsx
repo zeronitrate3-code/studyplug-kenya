@@ -27,7 +27,7 @@ interface PartnerProfile {
 
 const DirectMessage = () => {
   const { userId } = useParams<{ userId: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const onlineIds = usePresenceState();
   const endRef = useRef<HTMLDivElement>(null);
@@ -108,7 +108,7 @@ const DirectMessage = () => {
       setMessages((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data as DM]));
       void sendNotification({
         recipientId: userId,
-        title: `New message from ${profileName()}`,
+        title: `New message from ${profile?.display_name || "a classmate"}`,
         body: body.slice(0, 120),
         link: `/messages/${user.id}`,
         type: "direct_message",
