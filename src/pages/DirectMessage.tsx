@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePresenceState, formatLastSeen } from "@/hooks/usePresence";
 import { ArrowLeft, Loader2, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { sendNotification } from "@/lib/push";
+
 
 interface DM {
   id: string;
@@ -25,7 +27,7 @@ interface PartnerProfile {
 
 const DirectMessage = () => {
   const { userId } = useParams<{ userId: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const onlineIds = usePresenceState();
   const endRef = useRef<HTMLDivElement>(null);
@@ -104,8 +106,16 @@ const DirectMessage = () => {
       .single();
     if (!error && data) {
       setMessages((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data as DM]));
+      void sendNotification({
+        recipientId: userId,
+        title: `New message from ${profile?.display_name || "a classmate"}`,
+        body: body.slice(0, 120),
+        link: `/messages/${user.id}`,
+        type: "direct_message",
+      });
     }
     setSending(false);
+
   };
 
   if (!user) return null;

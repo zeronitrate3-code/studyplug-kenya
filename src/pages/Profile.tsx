@@ -12,9 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GRADES } from "@/lib/mockData";
 import { useTheme } from "next-themes";
+import { useRoles } from "@/hooks/useRoles";
 
 const Profile = () => {
   const { user, profile, signOut, refreshProfile } = useAuth();
+  const { isAdmin } = useRoles();
+
   const navigate = useNavigate();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -116,7 +119,17 @@ const Profile = () => {
       desc: profile.is_private ? "Only friends see your stats — tap to change" : "Anyone can see your stats — tap to lock",
       action: togglePrivacy,
     },
-    { icon: Bell, label: "Notifications", desc: "Manage alerts" },
+    {
+      icon: Bell, label: "Notifications", desc: "Alerts & device push settings",
+      action: () => navigate("/notifications"),
+    },
+    ...(isAdmin
+      ? [{
+          icon: Shield, label: "Owner console", desc: "Questions, learners & announcements",
+          action: () => navigate("/admin"),
+        }]
+      : []),
+
     { icon: FileText, label: "Privacy Policy", desc: "Read our policy", action: () => navigate("/privacy") },
     { icon: HelpCircle, label: "Help & FAQ", desc: "Get support" },
     { icon: LogOut, label: "Log Out", desc: "Sign out", destructive: true, action: handleSignOut },
