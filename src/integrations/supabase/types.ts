@@ -71,6 +71,35 @@ export type Database = {
         }
         Relationships: []
       }
+      bookmarked_notes: {
+        Row: {
+          created_at: string
+          id: string
+          note_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarked_notes_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           avatar_url: string | null
@@ -507,6 +536,65 @@ export type Database = {
         }
         Relationships: []
       }
+      notes: {
+        Row: {
+          common_mistakes: string | null
+          content: string | null
+          created_at: string
+          created_by: string | null
+          examples: string | null
+          formulas: string | null
+          id: string
+          introduction: string | null
+          key_points: string | null
+          order_number: number
+          summary: string | null
+          title: string
+          topic_id: string
+          updated_at: string
+        }
+        Insert: {
+          common_mistakes?: string | null
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          examples?: string | null
+          formulas?: string | null
+          id?: string
+          introduction?: string | null
+          key_points?: string | null
+          order_number?: number
+          summary?: string | null
+          title: string
+          topic_id: string
+          updated_at?: string
+        }
+        Update: {
+          common_mistakes?: string | null
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          examples?: string | null
+          formulas?: string | null
+          id?: string
+          introduction?: string | null
+          key_points?: string | null
+          order_number?: number
+          summary?: string | null
+          title?: string
+          topic_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -539,6 +627,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      practice_questions: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          explanation: string | null
+          id: string
+          note_id: string
+          option_a: string
+          option_b: string
+          option_c: string | null
+          option_d: string | null
+          order_number: number
+          question: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          note_id: string
+          option_a: string
+          option_b: string
+          option_c?: string | null
+          option_d?: string | null
+          order_number?: number
+          question: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          note_id?: string
+          option_a?: string
+          option_b?: string
+          option_c?: string | null
+          option_d?: string | null
+          order_number?: number
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_questions_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -748,6 +886,47 @@ export type Database = {
           },
         ]
       }
+      student_note_progress: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          last_viewed_at: string
+          note_id: string
+          progress_percentage: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          last_viewed_at?: string
+          note_id: string
+          progress_percentage?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          last_viewed_at?: string
+          note_id?: string
+          progress_percentage?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_note_progress_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subject_leaderboard_stats: {
         Row: {
           exams_taken: number
@@ -777,22 +956,28 @@ export type Database = {
       }
       subjects: {
         Row: {
+          code: string | null
           color: string | null
           created_at: string
+          description: string | null
           icon: string | null
           id: string
           name: string
         }
         Insert: {
+          code?: string | null
           color?: string | null
           created_at?: string
+          description?: string | null
           icon?: string | null
           id: string
           name: string
         }
         Update: {
+          code?: string | null
           color?: string | null
           created_at?: string
+          description?: string | null
           icon?: string | null
           id?: string
           name?: string
@@ -806,6 +991,7 @@ export type Database = {
           grade_id: number | null
           id: string
           name: string
+          order_number: number
           subject_id: string
         }
         Insert: {
@@ -814,6 +1000,7 @@ export type Database = {
           grade_id?: number | null
           id?: string
           name: string
+          order_number?: number
           subject_id: string
         }
         Update: {
@@ -822,6 +1009,7 @@ export type Database = {
           grade_id?: number | null
           id?: string
           name?: string
+          order_number?: number
           subject_id?: string
         }
         Relationships: [
