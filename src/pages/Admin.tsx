@@ -175,6 +175,9 @@ const Admin = () => {
         </>
       )}
 
+      <AdminNotes subjects={subjects} />
+
+
 
       <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
         <h2 className="text-sm font-semibold text-foreground flex items-center gap-2"><Plus className="h-4 w-4" /> Add a question</h2>
