@@ -15,6 +15,8 @@ import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
 import Notes from "./pages/Notes";
 import NoteTopicPage from "./pages/NoteTopic";
+import NoteViewer from "./pages/NoteViewer";
+
 import Exams from "./pages/Exams";
 import ExamTaking from "./pages/ExamTaking";
 import Leaderboard from "./pages/Leaderboard";
