@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import AdminLearners from "@/components/admin/AdminLearners";
 import AdminBroadcast from "@/components/admin/AdminBroadcast";
+import AdminNotes from "@/components/admin/AdminNotes";
+
 
 
 interface SubjectRow {
