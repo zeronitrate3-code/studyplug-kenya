@@ -61,7 +61,9 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/notes" element={<Notes />} />
+            <Route path="/notes/view/:noteId" element={<NoteViewer />} />
             <Route path="/notes/:topicKey" element={<NoteTopicPage />} />
+
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/history" element={<ExamHistory />} />
             <Route path="/stats" element={<Statistics />} />
