@@ -15,6 +15,8 @@ import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
 import Notes from "./pages/Notes";
 import NoteTopicPage from "./pages/NoteTopic";
+import NoteViewer from "./pages/NoteViewer";
+
 import Exams from "./pages/Exams";
 import ExamTaking from "./pages/ExamTaking";
 import Leaderboard from "./pages/Leaderboard";
@@ -59,7 +61,9 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/notes" element={<Notes />} />
+            <Route path="/notes/view/:noteId" element={<NoteViewer />} />
             <Route path="/notes/:topicKey" element={<NoteTopicPage />} />
+
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/history" element={<ExamHistory />} />
             <Route path="/stats" element={<Statistics />} />
