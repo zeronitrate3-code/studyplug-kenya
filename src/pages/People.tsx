@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Search, UserPlus, Check, X, UserMinus, Clock } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Check, X, UserMinus, Clock, MessageSquare } from "lucide-react";
 
 type Profile = {
   user_id: string;
@@ -115,16 +115,30 @@ const People = () => {
     const initials = (p.display_name || "?").charAt(0).toUpperCase();
     return (
       <div key={p.user_id} className="flex items-center gap-3 p-3 border-b border-border last:border-0">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={p.avatar_url || undefined} />
-          <AvatarFallback>{initials}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">
-            {p.display_name || "Anonymous"}
-          </p>
-          <p className="text-xs text-muted-foreground">Grade {p.grade ?? "—"}</p>
-        </div>
+        <button
+          onClick={() => navigate(`/profile/${p.user_id}`)}
+          className="flex flex-1 items-center gap-3 min-w-0 text-left"
+        >
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={p.avatar_url || undefined} />
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">
+              {p.display_name || "Anonymous"}
+            </p>
+            <p className="text-xs text-muted-foreground">Grade {p.grade ?? "—"}</p>
+          </div>
+        </button>
+        <Button
+          size="icon"
+          variant="ghost"
+          aria-label={`Message ${p.display_name || "student"}`}
+          onClick={() => navigate(`/messages/${p.user_id}`)}
+        >
+          <MessageSquare className="h-4 w-4" />
+        </Button>
+
         {rel.kind === "none" && (
           <Button size="sm" onClick={() => sendRequest(p.user_id)}>
             <UserPlus className="h-4 w-4 mr-1" /> Add
