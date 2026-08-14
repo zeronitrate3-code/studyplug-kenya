@@ -26,6 +26,9 @@ const ExamTaking = () => {
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [timeLimit, setTimeLimit] = useState(0);
+  const [review, setReview] = useState<Record<string, { correct: number | null; explanation: string }>>({});
+  const [serverScore, setServerScore] = useState<number | null>(null);
+
 
   // Load questions ONCE per mount (never during timer ticks).
   useEffect(() => {
