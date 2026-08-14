@@ -5,7 +5,9 @@ import { useStudyContext } from "@/contexts/StudyContext";
 import { subjectById } from "@/lib/curriculum";
 import { toast } from "@/hooks/use-toast";
 import {
+  checkPracticeAnswer,
   fetchBookmarks,
+  type PracticeCheck,
   fetchNote,
   fetchPracticeQuestions,
   fetchProgress,
