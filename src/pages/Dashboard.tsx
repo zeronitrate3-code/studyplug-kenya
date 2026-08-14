@@ -4,7 +4,7 @@ import { defaultSubjectsForGrade, subjectById } from "@/lib/curriculum";
 import SubjectCard from "@/components/SubjectCard";
 import StatCard from "@/components/StatCard";
 import logo from "@/assets/logo.png";
-import { ChevronDown, Download } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -107,18 +107,6 @@ const Dashboard = () => {
         <StatCard icon="🎯" label="Accuracy" value={`${accuracy}%`} color="accent" />
         <StatCard icon="⭐" label="Rank Points" value={totalPoints} color="success" />
       </div>
-
-      {/* Install Banner */}
-      <button
-        onClick={() => navigate("/install")}
-        className="w-full rounded-xl gradient-hero p-4 flex items-center gap-3 text-left shadow-md"
-      >
-        <Download className="h-8 w-8 text-primary-foreground shrink-0" />
-        <div>
-          <p className="text-sm font-semibold text-primary-foreground">Install StudyPlug App</p>
-          <p className="text-xs text-primary-foreground/70">Add to home screen for the best experience</p>
-        </div>
-      </button>
 
       {/* My subjects */}
       <div>
