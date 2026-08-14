@@ -31,8 +31,6 @@ export interface PracticeQuestionRow {
   option_b: string;
   option_c: string | null;
   option_d: string | null;
-  correct_answer: string;
-  explanation: string | null;
   order_number: number;
 }
 
@@ -84,7 +82,7 @@ export async function fetchNote(noteId: string): Promise<NoteWithTopic | null> {
 export async function fetchPracticeQuestions(noteId: string) {
   const { data, error } = await supabase
     .from("practice_questions")
-    .select("id,note_id,question,option_a,option_b,option_c,option_d,correct_answer,explanation,order_number")
+    .select("id,note_id,question,option_a,option_b,option_c,option_d,order_number")
     .eq("note_id", noteId)
     .order("order_number");
   if (error) throw error;
@@ -141,4 +139,20 @@ export async function toggleBookmark(userId: string, noteId: string, on: boolean
     .eq("user_id", userId)
     .eq("note_id", noteId);
   return error;
+}
+
+export interface PracticeCheck {
+  correct: boolean;
+  correct_answer: string;
+  explanation: string;
+}
+
+/** Answer keys stay on the server — revealed only once the learner answers. */
+export async function checkPracticeAnswer(questionId: string, answer: string) {
+  const { data, error } = await supabase.rpc("check_practice_answer", {
+    p_question_id: questionId,
+    p_answer: answer,
+  });
+  if (error) throw error;
+  return data as unknown as PracticeCheck;
 }
