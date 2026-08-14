@@ -93,12 +93,8 @@ const AdminNotes = ({ subjects }: { subjects: SubjectRow[] }) => {
   }, [topicId]);
 
   const loadQuestions = async (nid: string) => {
-    const { data } = await supabase
-      .from("practice_questions")
-      .select("id,question,correct_answer")
-      .eq("note_id", nid)
-      .order("order_number");
-    setQuestions((data ?? []) as PQRow[]);
+    const { data } = await supabase.rpc("staff_list_practice_questions", { p_note_id: nid });
+    setQuestions((data ?? []) as unknown as PQRow[]);
   };
 
   useEffect(() => {

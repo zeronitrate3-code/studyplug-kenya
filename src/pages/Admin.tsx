@@ -70,13 +70,12 @@ const Admin = () => {
   }, []);
 
   const loadQuestions = async (subjectId: string) => {
-    const { data } = await supabase
-      .from("questions")
-      .select("id,subject_id,question,options,correct_answer,explanation,grade_id")
-      .eq("subject_id", subjectId)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setQuestions((data ?? []) as unknown as QuestionRow[]);
+    // Answer keys are staff-only and served through a secured routine.
+    const { data } = await supabase.rpc("staff_list_questions", { p_limit: 500 });
+    const rows = ((data ?? []) as unknown as QuestionRow[]).filter(
+      (q) => q.subject_id === subjectId
+    );
+    setQuestions(rows.slice(0, 50));
   };
 
   useEffect(() => {
