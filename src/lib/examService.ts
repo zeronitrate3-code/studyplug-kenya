@@ -46,9 +46,10 @@ export const loadExamQuestions = async (
 
   const ids = [subjectId, ALIASES[subjectId]].filter(Boolean) as string[];
 
+  // NOTE: answer keys are never sent to the browser. Marking happens server-side.
   const { data, error } = await supabase
     .from("questions")
-    .select("id,question,options,correct_answer,explanation")
+    .select("id,question,options")
     .in("subject_id", ids)
     .limit(1000);
 
@@ -81,10 +82,11 @@ export const loadExamQuestions = async (
       id: q.id,
       question: q.question,
       options: (q.options as string[]) ?? [],
-      correctAnswer: q.correct_answer,
-      explanation: q.explanation ?? "",
+      correctAnswer: -1, // revealed only after submission
+      explanation: "",
     }));
 };
+
 
 export interface SubmitExamInput {
   userId: string;
