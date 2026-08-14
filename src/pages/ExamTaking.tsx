@@ -66,10 +66,18 @@ const ExamTaking = () => {
     [currentQ]
   );
 
-  const score = answers.reduce<number>(
-    (acc, ans, i) => acc + (ans === questions[i]?.correctAnswer ? 1 : 0),
+  // Correct answers only exist locally for the offline bank; online exams get
+  // them back from the server after the attempt is marked.
+  const correctFor = useCallback(
+    (q: ExamQuestion) => review[q.id]?.correct ?? q.correctAnswer,
+    [review]
+  );
+
+  const localScore = answers.reduce<number>(
+    (acc, ans, i) => acc + (questions[i] && ans === correctFor(questions[i]) ? 1 : 0),
     0
   );
+  const score = serverScore ?? localScore;
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
   const points = score * 10;
   const mins = Math.floor(timeLeft / 60);
@@ -84,10 +92,10 @@ const ExamTaking = () => {
         subject_id: subjectId || "",
         subject_name: subject?.name || subjectId || "Exam",
         grade,
-        score,
+        score: localScore,
         total_questions: questions.length,
-        percentage,
-        points,
+        percentage: Math.round((localScore / questions.length) * 100),
+        points: localScore * 10,
         created_at: new Date().toISOString(),
       };
 
@@ -97,28 +105,32 @@ const ExamTaking = () => {
         return;
       }
 
-      const { error } = await submitExam({
+      const { error, result } = await submitExam({
         userId: user.id,
         subjectId: subjectId || "",
         subjectName: subject?.name || subjectId || "Exam",
         grade,
         questions,
         answers,
-        score,
-        percentage,
-        points,
         timeTakenSeconds: Math.max(0, timeLimit - timeLeft),
       });
 
-      if (error) {
+      if (error || !result) {
         queueExamResult(offlinePayload);
         toast({ title: "Saved offline", description: "Couldn't reach the server — we'll upload it later." });
       } else {
-        toast({ title: "Result saved!", description: `+${points} points added to your rank.` });
+        const map: Record<string, { correct: number | null; explanation: string }> = {};
+        (result.review ?? []).forEach((r) => {
+          map[r.question_id] = { correct: r.correct_answer, explanation: r.explanation };
+        });
+        setReview(map);
+        setServerScore(result.score);
+        toast({ title: "Result saved!", description: `+${result.points} points added to your rank.` });
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, user, subjectId, grade, questions.length, percentage, points]);
+  }, [phase, user, subjectId, grade, questions.length]);
+
 
   if (phase === "loading") {
     return (
