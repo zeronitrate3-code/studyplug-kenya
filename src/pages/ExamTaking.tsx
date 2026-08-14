@@ -186,7 +186,9 @@ const ExamTaking = () => {
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">Review Answers</h2>
           {questions.map((q, i) => {
-            const isCorrect = answers[i] === q.correctAnswer;
+            const correctIdx = correctFor(q);
+            const explanation = review[q.id]?.explanation || q.explanation;
+            const isCorrect = correctIdx >= 0 && answers[i] === correctIdx;
             return (
               <div key={q.id} className={`rounded-xl border p-4 ${isCorrect ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5"}`}>
                 <div className="flex items-start gap-2 mb-2">
@@ -195,9 +197,10 @@ const ExamTaking = () => {
                 </div>
                 <p className="text-xs text-muted-foreground ml-7">
                   {!isCorrect && <>Your answer: <span className="text-destructive font-medium">{answers[i] === null ? "—" : q.options[answers[i] as number]}</span> • </>}
-                  Correct: <span className="text-success font-medium">{q.options[q.correctAnswer]}</span>
+                  {correctIdx >= 0 && <>Correct: <span className="text-success font-medium">{q.options[correctIdx]}</span></>}
                 </p>
-                <p className="text-xs text-muted-foreground ml-7 mt-1 italic">{q.explanation}</p>
+                <p className="text-xs text-muted-foreground ml-7 mt-1 italic">{explanation}</p>
+
               </div>
             );
           })}
