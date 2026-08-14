@@ -1095,9 +1095,72 @@ export type Database = {
       }
     }
     Functions: {
+      check_practice_answer: {
+        Args: { p_answer: string; p_question_id: string }
+        Returns: Json
+      }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       my_roles: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      staff_list_practice_questions: {
+        Args: { p_note_id: string }
+        Returns: {
+          correct_answer: string
+          created_at: string
+          explanation: string | null
+          id: string
+          note_id: string
+          option_a: string
+          option_b: string
+          option_c: string | null
+          option_d: string | null
+          order_number: number
+          question: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "practice_questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      staff_list_questions: {
+        Args: { p_limit?: number }
+        Returns: {
+          correct_answer: number
+          created_at: string
+          created_by: string | null
+          difficulty: string
+          explanation: string | null
+          grade_id: number | null
+          id: string
+          legacy_key: string | null
+          options: Json
+          question: string
+          subject_id: string
+          topic_id: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      submit_exam_attempt: {
+        Args: {
+          p_answers: Json
+          p_exam_id?: string
+          p_grade_id: number
+          p_question_ids: string[]
+          p_subject_id: string
+          p_subject_name: string
+          p_time_taken_seconds?: number
+        }
+        Returns: Json
       }
     }
     Enums: {

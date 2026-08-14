@@ -5,7 +5,9 @@ import { useStudyContext } from "@/contexts/StudyContext";
 import { subjectById } from "@/lib/curriculum";
 import { toast } from "@/hooks/use-toast";
 import {
+  checkPracticeAnswer,
   fetchBookmarks,
+  type PracticeCheck,
   fetchNote,
   fetchPracticeQuestions,
   fetchProgress,
@@ -30,6 +32,8 @@ const Section = ({ title, body }: { title: string; body?: string | null }) => {
 const Practice = ({ questions }: { questions: PracticeQuestionRow[] }) => {
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
+  const [result, setResult] = useState<PracticeCheck | null>(null);
+  const [checking, setChecking] = useState(false);
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
 
@@ -50,6 +54,7 @@ const Practice = ({ questions }: { questions: PracticeQuestionRow[] }) => {
   const reset = () => {
     setIndex(0);
     setPicked(null);
+    setResult(null);
     setScore(0);
     setDone(false);
   };
@@ -73,7 +78,24 @@ const Practice = ({ questions }: { questions: PracticeQuestionRow[] }) => {
     );
   }
 
-  const correct = picked !== null && picked === q.correct_answer.trim().toUpperCase();
+  const correct = result?.correct ?? false;
+  const answerKey = result?.correct_answer ?? null;
+
+  const answer = async (key: string) => {
+    if (picked !== null || checking) return;
+    setPicked(key);
+    setChecking(true);
+    try {
+      const res = await checkPracticeAnswer(q.id, key);
+      setResult(res);
+      if (res.correct) setScore((s) => s + 1);
+    } catch {
+      toast({ title: "Couldn't check that answer", description: "Please try again.", variant: "destructive" });
+      setPicked(null);
+    } finally {
+      setChecking(false);
+    }
+  };
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4">
@@ -87,9 +109,9 @@ const Practice = ({ questions }: { questions: PracticeQuestionRow[] }) => {
       <div className="space-y-2">
         {options.map(([key, value]) => {
           const isPicked = picked === key;
-          const isAnswer = key === q.correct_answer.trim().toUpperCase();
+          const isAnswer = answerKey !== null && key === answerKey;
           const state =
-            picked === null
+            result === null
               ? "border-border bg-background"
               : isAnswer
                 ? "border-success bg-success/10"
@@ -100,10 +122,7 @@ const Practice = ({ questions }: { questions: PracticeQuestionRow[] }) => {
             <button
               key={key}
               disabled={picked !== null}
-              onClick={() => {
-                setPicked(key);
-                if (key === q.correct_answer.trim().toUpperCase()) setScore((s) => s + 1);
-              }}
+              onClick={() => void answer(key)}
               className={`w-full rounded-xl border p-3 text-left text-sm text-foreground transition-all active:scale-[0.99] ${state}`}
             >
               <span className="mr-2 font-semibold">{key}.</span>
@@ -112,12 +131,12 @@ const Practice = ({ questions }: { questions: PracticeQuestionRow[] }) => {
           );
         })}
       </div>
-      {picked !== null && (
+      {result !== null && (
         <div className="mt-3 space-y-2">
           <p className={`text-sm font-semibold ${correct ? "text-success" : "text-destructive"}`}>
             {correct ? "✓ Correct" : "✗ Incorrect"}
           </p>
-          {q.explanation && <p className="text-xs text-muted-foreground">{q.explanation}</p>}
+          {result.explanation && <p className="text-xs text-muted-foreground">{result.explanation}</p>}
           <Button
             className="w-full"
             onClick={() => {
@@ -125,6 +144,7 @@ const Practice = ({ questions }: { questions: PracticeQuestionRow[] }) => {
               else {
                 setIndex((i) => i + 1);
                 setPicked(null);
+                setResult(null);
               }
             }}
           >
@@ -132,6 +152,7 @@ const Practice = ({ questions }: { questions: PracticeQuestionRow[] }) => {
           </Button>
         </div>
       )}
+
     </section>
   );
 };

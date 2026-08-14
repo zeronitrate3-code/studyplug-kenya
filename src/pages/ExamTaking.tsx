@@ -26,6 +26,9 @@ const ExamTaking = () => {
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [timeLimit, setTimeLimit] = useState(0);
+  const [review, setReview] = useState<Record<string, { correct: number | null; explanation: string }>>({});
+  const [serverScore, setServerScore] = useState<number | null>(null);
+
 
   // Load questions ONCE per mount (never during timer ticks).
   useEffect(() => {
@@ -66,10 +69,18 @@ const ExamTaking = () => {
     [currentQ]
   );
 
-  const score = answers.reduce<number>(
-    (acc, ans, i) => acc + (ans === questions[i]?.correctAnswer ? 1 : 0),
+  // Correct answers only exist locally for the offline bank; online exams get
+  // them back from the server after the attempt is marked.
+  const correctFor = useCallback(
+    (q: ExamQuestion) => review[q.id]?.correct ?? q.correctAnswer,
+    [review]
+  );
+
+  const localScore = answers.reduce<number>(
+    (acc, ans, i) => acc + (questions[i] && ans === correctFor(questions[i]) ? 1 : 0),
     0
   );
+  const score = serverScore ?? localScore;
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
   const points = score * 10;
   const mins = Math.floor(timeLeft / 60);
@@ -84,10 +95,10 @@ const ExamTaking = () => {
         subject_id: subjectId || "",
         subject_name: subject?.name || subjectId || "Exam",
         grade,
-        score,
+        score: localScore,
         total_questions: questions.length,
-        percentage,
-        points,
+        percentage: Math.round((localScore / questions.length) * 100),
+        points: localScore * 10,
         created_at: new Date().toISOString(),
       };
 
@@ -97,28 +108,32 @@ const ExamTaking = () => {
         return;
       }
 
-      const { error } = await submitExam({
+      const { error, result } = await submitExam({
         userId: user.id,
         subjectId: subjectId || "",
         subjectName: subject?.name || subjectId || "Exam",
         grade,
         questions,
         answers,
-        score,
-        percentage,
-        points,
         timeTakenSeconds: Math.max(0, timeLimit - timeLeft),
       });
 
-      if (error) {
+      if (error || !result) {
         queueExamResult(offlinePayload);
         toast({ title: "Saved offline", description: "Couldn't reach the server — we'll upload it later." });
       } else {
-        toast({ title: "Result saved!", description: `+${points} points added to your rank.` });
+        const map: Record<string, { correct: number | null; explanation: string }> = {};
+        (result.review ?? []).forEach((r) => {
+          map[r.question_id] = { correct: r.correct_answer, explanation: r.explanation };
+        });
+        setReview(map);
+        setServerScore(result.score);
+        toast({ title: "Result saved!", description: `+${result.points} points added to your rank.` });
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, user, subjectId, grade, questions.length, percentage, points]);
+  }, [phase, user, subjectId, grade, questions.length]);
+
 
   if (phase === "loading") {
     return (
@@ -171,7 +186,9 @@ const ExamTaking = () => {
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">Review Answers</h2>
           {questions.map((q, i) => {
-            const isCorrect = answers[i] === q.correctAnswer;
+            const correctIdx = correctFor(q);
+            const explanation = review[q.id]?.explanation || q.explanation;
+            const isCorrect = correctIdx >= 0 && answers[i] === correctIdx;
             return (
               <div key={q.id} className={`rounded-xl border p-4 ${isCorrect ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5"}`}>
                 <div className="flex items-start gap-2 mb-2">
@@ -180,9 +197,10 @@ const ExamTaking = () => {
                 </div>
                 <p className="text-xs text-muted-foreground ml-7">
                   {!isCorrect && <>Your answer: <span className="text-destructive font-medium">{answers[i] === null ? "—" : q.options[answers[i] as number]}</span> • </>}
-                  Correct: <span className="text-success font-medium">{q.options[q.correctAnswer]}</span>
+                  {correctIdx >= 0 && <>Correct: <span className="text-success font-medium">{q.options[correctIdx]}</span></>}
                 </p>
-                <p className="text-xs text-muted-foreground ml-7 mt-1 italic">{q.explanation}</p>
+                <p className="text-xs text-muted-foreground ml-7 mt-1 italic">{explanation}</p>
+
               </div>
             );
           })}

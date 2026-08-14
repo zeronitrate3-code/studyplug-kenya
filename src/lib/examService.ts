@@ -46,9 +46,10 @@ export const loadExamQuestions = async (
 
   const ids = [subjectId, ALIASES[subjectId]].filter(Boolean) as string[];
 
+  // NOTE: answer keys are never sent to the browser. Marking happens server-side.
   const { data, error } = await supabase
     .from("questions")
-    .select("id,question,options,correct_answer,explanation")
+    .select("id,question,options")
     .in("subject_id", ids)
     .limit(1000);
 
@@ -81,10 +82,11 @@ export const loadExamQuestions = async (
       id: q.id,
       question: q.question,
       options: (q.options as string[]) ?? [],
-      correctAnswer: q.correct_answer,
-      explanation: q.explanation ?? "",
+      correctAnswer: -1, // revealed only after submission
+      explanation: "",
     }));
 };
+
 
 export interface SubmitExamInput {
   userId: string;
@@ -93,48 +95,48 @@ export interface SubmitExamInput {
   grade: number;
   questions: ExamQuestion[];
   answers: (number | null)[];
-  score: number;
-  percentage: number;
-  points: number;
   timeTakenSeconds: number;
 }
 
-/** Saves the attempt + auto-marked result, then awards any new badges. */
-export const submitExam = async (input: SubmitExamInput) => {
-  const questionIds = input.questions.map((q) => q.dbId).filter(Boolean);
+export interface ReviewRow {
+  question_id: string;
+  correct_answer: number | null;
+  explanation: string;
+}
 
-  const { data: attempt } = await supabase
-    .from("exam_attempts")
-    .insert({
-      user_id: input.userId,
-      subject_id: input.subjectId,
-      grade_id: input.grade,
-      question_ids: questionIds,
-      answers: input.answers,
-      status: "completed",
-      submitted_at: new Date().toISOString(),
-    })
-    .select("id")
-    .single();
+export interface SubmitExamResult {
+  score: number;
+  total: number;
+  percentage: number;
+  points: number;
+  review: ReviewRow[];
+}
 
-  const { error } = await supabase.from("results").insert({
-    user_id: input.userId,
-    attempt_id: attempt?.id ?? null,
-    subject_id: input.subjectId,
-    subject_name: input.subjectName,
-    grade_id: input.grade,
-    score: input.score,
-    total_questions: input.questions.length,
-    percentage: input.percentage,
-    points: input.points,
-    time_taken_seconds: input.timeTakenSeconds,
+/**
+ * Sends the attempt to the server, which marks it and only then returns the
+ * correct answers/explanations for the review screen.
+ */
+export const submitExam = async (
+  input: SubmitExamInput
+): Promise<{ error: unknown; result: SubmitExamResult | null }> => {
+  const questionIds = input.questions.map((q) => q.dbId).filter(Boolean) as string[];
+
+  const { data, error } = await supabase.rpc("submit_exam_attempt", {
+    p_subject_id: input.subjectId,
+    p_subject_name: input.subjectName,
+    p_grade_id: input.grade,
+    p_question_ids: questionIds,
+    p_answers: input.answers as unknown as never,
+    p_time_taken_seconds: input.timeTakenSeconds,
   });
 
-  if (error) return { error };
+  if (error) return { error, result: null };
 
-  await awardAchievements(input.userId, input.percentage);
-  return { error: null };
+  const payload = data as unknown as SubmitExamResult;
+  await awardAchievements(input.userId, payload?.percentage ?? 0);
+  return { error: null, result: payload };
 };
+
 
 /** Checks badge criteria against the student's live stats and awards new ones. */
 export const awardAchievements = async (userId: string, lastPercentage?: number) => {
