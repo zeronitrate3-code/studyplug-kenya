@@ -34,12 +34,15 @@ const DirectMessage = () => {
   const navigate = useNavigate();
   const onlineIds = usePresenceState();
   const endRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [partner, setPartner] = useState<PartnerProfile | null>(null);
   const [messages, setMessages] = useState<DM[]>([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
 
   useEffect(() => {
     if (!user) { navigate("/auth"); return; }
