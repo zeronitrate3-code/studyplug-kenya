@@ -195,7 +195,7 @@ const DirectMessage = () => {
           return (
             <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[75%] rounded-2xl px-4 py-2 ${isMe ? "gradient-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"}`}>
-                {m.image_url && <img src={m.image_url} alt="shared" className="mb-1 max-h-48 rounded-lg object-cover" />}
+                {m.image_url && <DmMedia value={m.image_url} />}
                 {m.text && <p className="break-words text-sm">{m.text}</p>}
                 <span className="mt-1 block text-[10px] opacity-60">
                   {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -207,14 +207,37 @@ const DirectMessage = () => {
         <div ref={endRef} />
       </div>
 
-      <div className="safe-bottom border-t border-border bg-card p-3">
+      <div
+        className="shrink-0 border-t border-border bg-card px-3 pt-3"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
         <div className="flex items-center gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) void sendAttachment(f);
+            }}
+          />
+          <button
+            type="button"
+            aria-label="Attach a photo, video or file"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="rounded-xl border border-border p-2.5 text-muted-foreground disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
+          </button>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
             placeholder={`Message ${name.split(" ")[0]}...`}
-            className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           <button
             onClick={send}
@@ -225,6 +248,7 @@ const DirectMessage = () => {
           </button>
         </div>
       </div>
+
     </div>
   );
 };
