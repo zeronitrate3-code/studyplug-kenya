@@ -97,6 +97,18 @@ const DirectMessage = () => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const pushMessage = (row: DM, preview: string) => {
+    setMessages((prev) => (prev.some((p) => p.id === row.id) ? prev : [...prev, row]));
+    if (!userId || !user) return;
+    void sendNotification({
+      recipientId: userId,
+      title: `New message from ${profile?.display_name || "a classmate"}`,
+      body: preview.slice(0, 120),
+      link: `/messages/${user.id}`,
+      type: "direct_message",
+    });
+  };
+
   const send = async () => {
     if (!text.trim() || !user || !userId) return;
     setSending(true);
@@ -107,19 +119,40 @@ const DirectMessage = () => {
       .insert({ sender_id: user.id, recipient_id: userId, text: body })
       .select()
       .single();
-    if (!error && data) {
-      setMessages((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data as DM]));
-      void sendNotification({
-        recipientId: userId,
-        title: `New message from ${profile?.display_name || "a classmate"}`,
-        body: body.slice(0, 120),
-        link: `/messages/${user.id}`,
-        type: "direct_message",
-      });
-    }
+    if (!error && data) pushMessage(data as DM, body);
     setSending(false);
-
   };
+
+  const sendAttachment = async (file: File) => {
+    if (!user || !userId) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please share files under 25MB.", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+    const path = `${user.id}/${Date.now()}-${safeName}`;
+    const { error: upErr } = await supabase.storage.from("dm-media").upload(path, file, {
+      contentType: file.type || undefined,
+    });
+    if (upErr) {
+      setUploading(false);
+      toast({ title: "Upload failed", description: upErr.message, variant: "destructive" });
+      return;
+    }
+    const { data, error } = await supabase
+      .from("direct_messages")
+      .insert({ sender_id: user.id, recipient_id: userId, image_url: path })
+      .select()
+      .single();
+    setUploading(false);
+    if (error) {
+      toast({ title: "Could not send file", description: error.message, variant: "destructive" });
+      return;
+    }
+    if (data) pushMessage(data as DM, "📎 Sent an attachment");
+  };
+
 
   if (!user) return null;
 
