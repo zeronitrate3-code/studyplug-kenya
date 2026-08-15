@@ -3,9 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePresenceState, formatLastSeen } from "@/hooks/usePresence";
-import { ArrowLeft, Loader2, Send } from "lucide-react";
+import { ArrowLeft, Loader2, Paperclip, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { sendNotification } from "@/lib/push";
+import { toast } from "@/hooks/use-toast";
+import DmMedia from "@/components/DmMedia";
+
 
 
 interface DM {
