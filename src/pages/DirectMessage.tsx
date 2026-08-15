@@ -163,7 +163,7 @@ const DirectMessage = () => {
   const isOnline = userId ? onlineIds.has(userId) : false;
 
   return (
-    <div className="animate-fade-in mx-auto flex h-screen max-w-lg flex-col">
+    <div className="animate-fade-in mx-auto flex h-[100dvh] max-w-lg flex-col overscroll-none">
       <div className="flex items-center gap-2 border-b border-border bg-card px-3 py-3">
         <button onClick={() => navigate("/messages")} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-foreground hover:bg-muted">
           <ArrowLeft className="h-5 w-5" />
