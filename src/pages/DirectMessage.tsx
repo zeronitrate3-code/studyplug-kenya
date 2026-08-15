@@ -3,9 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePresenceState, formatLastSeen } from "@/hooks/usePresence";
-import { ArrowLeft, Loader2, Send } from "lucide-react";
+import { ArrowLeft, Loader2, Paperclip, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { sendNotification } from "@/lib/push";
+import { toast } from "@/hooks/use-toast";
+import DmMedia from "@/components/DmMedia";
+
 
 
 interface DM {
@@ -31,12 +34,15 @@ const DirectMessage = () => {
   const navigate = useNavigate();
   const onlineIds = usePresenceState();
   const endRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [partner, setPartner] = useState<PartnerProfile | null>(null);
   const [messages, setMessages] = useState<DM[]>([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
 
   useEffect(() => {
     if (!user) { navigate("/auth"); return; }
@@ -94,6 +100,18 @@ const DirectMessage = () => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const pushMessage = (row: DM, preview: string) => {
+    setMessages((prev) => (prev.some((p) => p.id === row.id) ? prev : [...prev, row]));
+    if (!userId || !user) return;
+    void sendNotification({
+      recipientId: userId,
+      title: `New message from ${profile?.display_name || "a classmate"}`,
+      body: preview.slice(0, 120),
+      link: `/messages/${user.id}`,
+      type: "direct_message",
+    });
+  };
+
   const send = async () => {
     if (!text.trim() || !user || !userId) return;
     setSending(true);
@@ -104,19 +122,40 @@ const DirectMessage = () => {
       .insert({ sender_id: user.id, recipient_id: userId, text: body })
       .select()
       .single();
-    if (!error && data) {
-      setMessages((prev) => (prev.some((p) => p.id === data.id) ? prev : [...prev, data as DM]));
-      void sendNotification({
-        recipientId: userId,
-        title: `New message from ${profile?.display_name || "a classmate"}`,
-        body: body.slice(0, 120),
-        link: `/messages/${user.id}`,
-        type: "direct_message",
-      });
-    }
+    if (!error && data) pushMessage(data as DM, body);
     setSending(false);
-
   };
+
+  const sendAttachment = async (file: File) => {
+    if (!user || !userId) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please share files under 25MB.", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+    const path = `${user.id}/${Date.now()}-${safeName}`;
+    const { error: upErr } = await supabase.storage.from("dm-media").upload(path, file, {
+      contentType: file.type || undefined,
+    });
+    if (upErr) {
+      setUploading(false);
+      toast({ title: "Upload failed", description: upErr.message, variant: "destructive" });
+      return;
+    }
+    const { data, error } = await supabase
+      .from("direct_messages")
+      .insert({ sender_id: user.id, recipient_id: userId, image_url: path })
+      .select()
+      .single();
+    setUploading(false);
+    if (error) {
+      toast({ title: "Could not send file", description: error.message, variant: "destructive" });
+      return;
+    }
+    if (data) pushMessage(data as DM, "📎 Sent an attachment");
+  };
+
 
   if (!user) return null;
 
@@ -124,7 +163,7 @@ const DirectMessage = () => {
   const isOnline = userId ? onlineIds.has(userId) : false;
 
   return (
-    <div className="animate-fade-in mx-auto flex h-screen max-w-lg flex-col">
+    <div className="animate-fade-in mx-auto flex h-[100dvh] max-w-lg flex-col overscroll-none">
       <div className="flex items-center gap-2 border-b border-border bg-card px-3 py-3">
         <button onClick={() => navigate("/messages")} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-foreground hover:bg-muted">
           <ArrowLeft className="h-5 w-5" />
@@ -156,7 +195,7 @@ const DirectMessage = () => {
           return (
             <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[75%] rounded-2xl px-4 py-2 ${isMe ? "gradient-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"}`}>
-                {m.image_url && <img src={m.image_url} alt="shared" className="mb-1 max-h-48 rounded-lg object-cover" />}
+                {m.image_url && <DmMedia value={m.image_url} />}
                 {m.text && <p className="break-words text-sm">{m.text}</p>}
                 <span className="mt-1 block text-[10px] opacity-60">
                   {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -168,14 +207,37 @@ const DirectMessage = () => {
         <div ref={endRef} />
       </div>
 
-      <div className="safe-bottom border-t border-border bg-card p-3">
+      <div
+        className="shrink-0 border-t border-border bg-card px-3 pt-3"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
         <div className="flex items-center gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) void sendAttachment(f);
+            }}
+          />
+          <button
+            type="button"
+            aria-label="Attach a photo, video or file"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="rounded-xl border border-border p-2.5 text-muted-foreground disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Paperclip className="h-5 w-5" />}
+          </button>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
             placeholder={`Message ${name.split(" ")[0]}...`}
-            className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           <button
             onClick={send}
@@ -186,6 +248,7 @@ const DirectMessage = () => {
           </button>
         </div>
       </div>
+
     </div>
   );
 };
